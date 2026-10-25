@@ -1,4 +1,4 @@
-import KantoDex from "../../components/KantoDex";
+import KantoDex from "./KantoDex";
 
 export default function KantoPage() {
   return <KantoDex />;

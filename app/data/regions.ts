@@ -25,7 +25,7 @@ export const REGION_CONFIG: Record<DexRegionKey, DexRegion> = {
     label: "Johto",
     startId: 152,
     count: 251,
-    accent: "#57b3ff",
+    accent: "#7C9A52",
     description: "Une seconde région riche en mystères et en légendes.",
     frenchNames: {},
   },

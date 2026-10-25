@@ -93,11 +93,13 @@ export function DexDetailsModal({
   loadPokemon,
   activePokemon,
   onClose,
+  endId,
   zIndex = 100,
   onFocus,
 }: {
   loadPokemon: (id: number) => Promise<void>;
   activePokemon: PokemonDetails | null;
+  endId: number;
   onClose: () => void;
   zIndex?: number;
   onFocus?: () => void;
@@ -331,6 +333,7 @@ export function DexDetailsModal({
 
               <div className="rounded border-2  border-[#1a1a1a] bg-white p-3 shadow-[3px_3px_0_rgba(0,0,0,0.15)]">
                                   <EvolutionChain2 
+                                    endId={ endId}
                                     onSelect={(pokemon) => void loadPokemon(pokemon.id)}
                                     speciesUrl={`https://pokeapi.co/api/v2/pokemon-species/${activePokemon.id}/`}
                                     currentId={activePokemon.id}

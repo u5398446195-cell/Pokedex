@@ -1,7 +1,7 @@
 "use client";
 
-import { KANTO_COUNT, KANTO_FRENCH_NAMES } from "../data/kanto";
-import RegionDex from "./RegionDex";
+import { KANTO_COUNT, KANTO_FRENCH_NAMES } from "../../data/kanto";
+import RegionDex from "../../components/RegionDex";
 
 export const endId= 151;
 export const startId=1;

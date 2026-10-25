@@ -1,4 +1,4 @@
-import RegionDex from "./RegionDex";
+import RegionDex from "../../components/RegionDex";
 
 export const endId = 251;
 export const JOHTO_COUNT = 100;
@@ -33,7 +33,7 @@ export default function JohtoDex() {
       title="Johto"
       startId={152}
       count={JOHTO_COUNT}
-      accent="#0f5373"
+      accent="#7C9A52"
       statBarColor="bg-green-400"
       frenchNames={JOHTO_FRENCH_NAMES}
     />

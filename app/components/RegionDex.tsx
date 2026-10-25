@@ -359,6 +359,7 @@ export default function RegionDex({
 
       {openModals.map((m) => (
         <DexDetailsModal
+          endId={endId}
           loadPokemon={loadPokemon}
           key={`modal-${m.uid}`}
           activePokemon={m.data}
