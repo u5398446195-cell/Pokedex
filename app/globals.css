@@ -1,0 +1,217 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Responsive layout: keep controls in the main panel, never over the list. */
+* { box-sizing: border-box; }
+html { min-width: 320px; }
+body { margin: 0; min-width: 320px; overflow-x: hidden; }
+img, svg, video, canvas { max-width: 100%; }
+button, input, select, textarea { max-width: 100%; }
+button { touch-action: manipulation; }
+
+@media (max-width: 1023px) {
+  .dex-screen { min-height: 0; height: clamp(190px, 30svh, 310px); }
+}
+@media (max-width: 767px) {
+  .dex-screen { height: clamp(160px, 25svh, 240px); border-width: 6px !important; }
+  input, select, textarea { font-size: 16px; }
+}
+@media (max-width: 480px) {
+  .dex-screen { height: clamp(145px, 22svh, 205px); }
+}
+@media (max-height: 700px) and (min-width: 768px) {
+  .dex-screen { height: 190px; }
+}
+
+/* Detail windows: keep the retro desktop-window feel while fitting touch screens. */
+.dex-details-window { contain: layout paint; }
+@media (max-width: 640px) {
+  .dex-details-window {
+    left: 8px !important;
+    top: 8px !important;
+    width: calc(100vw - 16px) !important;
+    max-width: none !important;
+    max-height: calc(100dvh - 16px) !important;
+    border-width: 4px !important;
+    box-shadow: 5px 5px 0 rgba(0,0,0,.85) !important;
+  }
+  .dex-details-window > div:first-child { padding: 10px 12px !important; }
+}
+
+.jelly {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid #e52435;
+  background: #fff;
+  color: #e52435;
+  cursor: pointer;
+  overflow: hidden;
+  isolation: isolate;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.surface {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 52px;
+  padding: 0 24px;
+  background: transparent;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.gel-core {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: #e52435;
+  clip-path: inset(100% 0 0 0);
+  pointer-events: none;
+}
+
+.gel-highlight {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 25%,
+    rgba(255, 255, 255, 0.2) 48%,
+    transparent 70%
+  );
+  transform: translateX(-120%);
+  pointer-events: none;
+}
+
+.gel-reflection {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  z-index: 1;
+  background: #e52435;
+  transform: scaleX(1);
+  transform-origin: left;
+  pointer-events: none;
+}
+
+.label {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: #e52435;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.label::after {
+  content: "↗";
+  display: inline-block;
+}
+
+/* Déclenchement de l'animation au survol */
+.jelly:hover .gel-core {
+  animation: gel-fill 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.jelly:hover .gel-highlight {
+  animation: gel-shine 500ms ease forwards;
+}
+
+.jelly:hover .gel-reflection {
+  animation: gel-line 320ms ease forwards;
+}
+
+.jelly:hover .label {
+  animation: label-white 320ms ease forwards;
+}
+
+.jelly:hover .label::after {
+  animation: arrow-move 250ms ease forwards;
+}
+
+/* Animations */
+@keyframes gel-fill {
+  from { clip-path: inset(100% 0 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+
+@keyframes gel-shine {
+  from { transform: translateX(-120%); }
+  to { transform: translateX(120%); }
+}
+
+@keyframes gel-line {
+from { transform: scaleX(1); }
+to { transform: scaleX(0); }
+}
+
+@keyframes label-white {
+from { color: #e52435; }
+to { color: #fff; }
+}
+
+@keyframes arrow-move {
+from { transform: translate(0, 0); }
+to { transform: translate(2px, -2px); }
+}
+
+.jelly {
+outline: 2px solid #e52435;
+outline-offset: 4px;
+}
+
+/* Aucun mouvement au clic */
+.jelly,
+.jelly .surface,
+.jelly.is-bouncing,
+.jelly.is-bouncing .surface {
+transform: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+.jelly .gel-core,
+.jelly .gel-highlight,
+.jelly .gel-reflection,
+.jelly .label,
+.jelly .label::after {
+animation-duration: 0.01ms;
+}
+}
+
