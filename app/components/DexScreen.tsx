@@ -9,23 +9,28 @@ function displayName(name: string) {
     .join(" ");
 }
 
+type DexScreenProps = {
+  activePokemon: PokemonDetails | null;
+  loading: boolean;
+  error: string;
+};
+
 export function DexScreen({
   activePokemon,
   loading,
   error,
-}: {
-  activePokemon: PokemonDetails | null;
-  loading: boolean;
-  error: string;
-}) {
+}: DexScreenProps) {
   return (
     <div className="dex-screen relative h-full min-h-0 w-full overflow-hidden border-[6px] border-[#ececec] bg-[#b8e8e9] sm:border-[8px]">
+      {/* Reflets de l'écran */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(255,255,255,0.75),transparent_35%),linear-gradient(160deg,rgba(255,255,255,0.24),transparent_35%)]" />
+
       <div className="dex-vignette pointer-events-none absolute inset-0" />
       <div className="dex-scanlines pointer-events-none absolute inset-0" />
       <div className="dex-noise pointer-events-none absolute inset-0" />
       <div className="dex-glass pointer-events-none absolute inset-0" />
 
+      {/* Contenu de l'écran */}
       <div className="relative z-10 flex h-full min-h-0 w-full items-center justify-center p-1.5 sm:p-2">
         {loading && (
           <div className="absolute inset-0 grid place-items-center">
@@ -40,7 +45,7 @@ export function DexScreen({
 
         {!loading && !error && activePokemon && (
           <>
-            <div className="absolute bottom-[10%] h-5 w-[52%] bg-[#145b61]/15 blur-2xl sm:h-8" />
+            <div className="pointer-events-none absolute bottom-[10%] h-5 w-[52%] bg-[#145b61]/15 blur-2xl sm:h-8" />
 
             <Image
               src={activePokemon.artwork}
@@ -49,7 +54,8 @@ export function DexScreen({
               width={420}
               height={420}
               priority
-              className="dex-pokemon-art relative z-10 h-full max-h-full w-full max-w-full object-contain"
+              sizes="(max-width: 639px) 90vw, (max-width: 1023px) 60vw, 50vw"
+              className="dex-pokemon-art relative z-10 h-full w-full object-contain"
             />
           </>
         )}
@@ -132,15 +138,18 @@ export function DexScreen({
         }
 
         .dex-pokemon-art {
+          display: block;
           filter: saturate(1.04) contrast(1.02);
           animation: breathe 4.5s ease-in-out infinite;
           object-position: center;
         }
 
         @keyframes breathe {
-          0%, 100% {
+          0%,
+          100% {
             transform: translateY(0) scale(1);
           }
+
           50% {
             transform: translateY(-4px) scale(1.012);
           }
@@ -150,6 +159,7 @@ export function DexScreen({
           from {
             transform: translateY(0);
           }
+
           to {
             transform: translateY(4px);
           }
@@ -159,15 +169,19 @@ export function DexScreen({
           0% {
             transform: translate(0, 0);
           }
+
           25% {
             transform: translate(0.5px, -0.5px);
           }
+
           50% {
             transform: translate(-0.5px, 0.5px);
           }
+
           75% {
             transform: translate(0.5px, 0.5px);
           }
+
           100% {
             transform: translate(0, 0);
           }

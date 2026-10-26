@@ -293,20 +293,20 @@ export default function RegionDex({
 
                <div className="flex min-h-0 flex-1 flex-col">
   {/* Écran Pokémon */}
-  <div className="relative min-h-0 flex-1 px-1.5 pb-1.5 pt-1 sm:px-2 sm:pb-2">
-    <DexScreen
-      activePokemon={activePokemon}
-      loading={loading || loadingDetails}
-      error={error}
-    />
-  </div>
+ <div className="relative h-[clamp(220px,30vh,400px)] shrink-0 px-1.5 pb-1.5 pt-1 sm:h-[clamp(240px,34vh,430px)] sm:px-2 sm:pb-2 md:h-auto md:min-h-0 md:flex-1">
+  <DexScreen
+    activePokemon={activePokemon}
+    loading={loading || loadingDetails}
+    error={error}
+  />
+</div>
 
   {/* Description juste sous l'écran */}
   {activePokemon && (
     <div className="shrink-0 px-2 pb-2">
       <div className="relative">
         <p
-          className="max-h-16 overflow-y-auto whitespace-pre-wrap break-words rounded-md p-2 text-center text-sm font-bold leading-relaxed text-white [scrollbar-width:thin] sm:text-base"
+          className="max-h-24 overflow-y-auto whitespace-pre-wrap break-words rounded-md p-2 text-center text-lg font-bold leading-relaxed text-white [scrollbar-width:thin] sm:text-base"
           style={{ backgroundColor: desFcolor }}
         >
           {activePokemon.description}
