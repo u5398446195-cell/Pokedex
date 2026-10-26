@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -41,7 +40,8 @@ export default function RegionDex({
   frenchNames = {},
 }: RegionDexProps) {
   const [pokemonList, setPokemonList] = useState<PokemonSummary[]>([]);
-  const [activePokemon, setActivePokemon] = useState<PokemonDetails | null>(null);
+  const [activePokemon, setActivePokemon] =
+    useState<PokemonDetails | null>(null);
   const [searchValue, setSearchValue] = useState("");
   const [searchDirty, setSearchDirty] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -58,9 +58,9 @@ export default function RegionDex({
   const [openModals, setOpenModals] = useState<ModalInstance[]>([]);
   const nextUid = useRef(1);
   const nextZ = useRef(100);
+
   const [showSimModal, setShowSimModal] = useState(false);
   const [showMobileList, setShowMobileList] = useState(false);
-  const [showStatsModal, setShowStatsModal] = useState(false);
   const [openMenu, setOpenMenu] = useState(false);
 
   const searchRef = useRef<HTMLInputElement | null>(null);
@@ -76,6 +76,7 @@ export default function RegionDex({
         setActivePokemon(cached);
         setSearchValue(cached.englishName);
         setSearchDirty(false);
+        setError("");
         return;
       }
 
@@ -115,6 +116,7 @@ export default function RegionDex({
         await loadPokemon(startId);
       } catch (err) {
         console.error(err);
+
         if (!cancelled) {
           setError(`Unable to load the ${title} index.`);
         }
@@ -132,6 +134,7 @@ export default function RegionDex({
 
   const suggestions = useMemo(() => {
     if (!searchDirty || !searchValue.trim()) return [];
+
     return getSearchSuggestions(searchValue, pokemonList);
   }, [searchDirty, searchValue, pokemonList]);
 
@@ -212,37 +215,37 @@ export default function RegionDex({
     const z = nextZ.current++;
     const snapshot = JSON.parse(JSON.stringify(activePokemon));
 
-    setOpenModals((s) => [
-      ...s,
+    setOpenModals((current) => [
+      ...current,
       { uid, id: activePokemon.id, data: snapshot, z },
     ]);
   }
 
   function closeModal(uid: number) {
-    setOpenModals((s) => s.filter((m) => m.uid !== uid));
+    setOpenModals((current) => current.filter((modal) => modal.uid !== uid));
   }
 
   function bringModalToFront(uid: number) {
     const z = nextZ.current++;
 
-    setOpenModals((s) =>
-      s.map((m) => (m.uid === uid ? { ...m, z } : m)),
+    setOpenModals((current) =>
+      current.map((modal) => (modal.uid === uid ? { ...modal, z } : modal)),
     );
   }
 
   return (
-    <main className="min-h-[100dvh] overflow-hidden relative bg-[#2c0914] overflow-y-auto">
+    <main className="relative min-h-[100dvh] overflow-x-hidden overflow-y-auto bg-[#2c0914] md:h-[100dvh] md:overflow-hidden">
       <div
         className={[
-          "absolute w-screen left-1 right-1 top-1 bottom-1 z-47 duration-500",
+          "absolute inset-1 z-[47] duration-500",
           openMenu ? "bg-black/40 backdrop-blur-xs" : "hidden",
         ].join(" ")}
       />
 
       <Menu openMenu={openMenu} setOpenMenu={setOpenMenu} />
 
-      <div className="relative mx-auto flex h-[100dvh] max-w-[1500px] flex-col border-[4px] border-[#7d0f1e] bg-[#c71938] shadow-[0_20px_60px_rgba(0,0,0,0.38),inset_0_1px_0_rgba(255,255,255,0.18)]">
-        <div className={showSuggestions ? "relative z-50" : "relative z-40"}>
+      <div className="relative mx-auto flex min-h-[100dvh] max-w-[1500px] flex-col border-[4px] border-[#7d0f1e] bg-[#c71938] shadow-[0_20px_60px_rgba(0,0,0,0.38),inset_0_1px_0_rgba(255,255,255,0.18)] md:h-full md:min-h-0">
+        <div className={showSuggestions ? "relative z-50 shrink-0" : "relative z-40 shrink-0"}>
           <DexHeader
             setOpenMenu={setOpenMenu}
             activePokemon={activePokemon}
@@ -261,62 +264,79 @@ export default function RegionDex({
           />
         </div>
 
-        <div className="flex min-h-0 flex-1 overflow-y-auto">
+        <div className="flex min-h-0 flex-1 flex-col md:flex-row">
           <section
-            className="min-h-0 flex-1 bg-[#c71938]"
+            className="min-h-0 min-w-0 flex-1"
             style={{ backgroundColor: accent }}
           >
-            <div className="grid h-full min-h-0 grid-cols-1 md:grid-cols-[minmax(0,1.6fr)_minmax(260px,0.9fr)]">
-              <div className="flex min-h-0 min-w-0 flex-col">
+            <div className="grid min-h-0 grid-cols-1 md:h-full md:grid-cols-[minmax(0,1.6fr)_minmax(260px,0.9fr)]">
+              {/* Colonne de gauche */}
+              <div className="flex min-h-[55dvh] min-w-0 flex-col md:min-h-0">
+                {/* Boutons mobiles */}
                 <div className="flex shrink-0 flex-row gap-2 px-2 pt-2 lg:hidden">
                   <button
                     onClick={openModalForActive}
-                    className="flex-1 border-2 border-white/20 bg-[#b0173e] px-2 py-2 font-mono text-xs font-black uppercase text-white hover:border-transparent hover:bg-[#ff698f]"
+                    disabled={!activePokemon}
+                    className="flex-1 border-2 border-white/20 bg-[#b0173e] px-2 py-2 font-mono text-xs font-black uppercase text-white hover:bg-[#ff698f] disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     Battle info
                   </button>
 
                   <button
                     onClick={() => setShowSimModal(true)}
-                    className="flex-1 border-2 border-white/20 bg-[#b0173e] px-2 py-2 font-mono text-xs font-black uppercase text-white hover:border-transparent hover:bg-[#ff698f]"
+                    disabled={!activePokemon}
+                    className="flex-1 border-2 border-white/20 bg-[#b0173e] px-2 py-2 font-mono text-xs font-black uppercase text-white hover:bg-[#ff698f] disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     Simulate
                   </button>
                 </div>
 
-                <div className="relative min-h-0 flex-1 px-1.5 pb-1.5 pt-1 sm:px-2 sm:pb-2">
-                  <DexScreen
-                    activePokemon={activePokemon}
-                    loading={loading || loadingDetails}
-                    error={error}
-                  />
-                </div>
+               <div className="flex min-h-0 flex-1 flex-col">
+  {/* Écran Pokémon */}
+  <div className="relative min-h-0 flex-1 px-1.5 pb-1.5 pt-1 sm:px-2 sm:pb-2">
+    <DexScreen
+      activePokemon={activePokemon}
+      loading={loading || loadingDetails}
+      error={error}
+    />
+  </div>
 
-                <div>
-                  {activePokemon && (
-                    <div className="px-2 pb-2 p-2 max-h-15 overflow-y-auto" style={{ backgroundColor: desFcolor }}>
-                      <p className={`text-center  font-bold md:text-xl  text-white p-1 rounded-md`}  
-          >
-                        {activePokemon.description}
-                      </p>
-                    </div>
-                  )}
-                </div>             <div className="hidden shrink-0 md:block">
-                  {activePokemon && (
-                    <div className="px-2 pb-2 p-2">
-                      <EvolutionChain
-                        startId={startId}
-                        endId={endId}
-                        onSelect={(pokemon) => void loadPokemon(pokemon.id)}
-                        speciesUrl={`https://pokeapi.co/api/v2/pokemon-species/${activePokemon.id}/`}
-                        currentId={activePokemon.id}
-                      />
-                    </div>
-                  )}
-                </div>
+  {/* Description juste sous l'écran */}
+  {activePokemon && (
+    <div className="shrink-0 px-2 pb-2">
+      <div className="relative">
+        <p
+          className="max-h-16 overflow-y-auto whitespace-pre-wrap break-words rounded-md p-2 text-center text-sm font-bold leading-relaxed text-white [scrollbar-width:thin] sm:text-base"
+          style={{ backgroundColor: desFcolor }}
+        >
+          {activePokemon.description}
+        </p>
+
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-6 rounded-b-md bg-gradient-to-t from-black/40 to-transparent"
+        />
+      </div>
+    </div>
+  )}
+
+  {/* Évolutions sur ordinateur */}
+  <div className="hidden shrink-0 px-2 pb-2 md:block">
+    {activePokemon && (
+      <EvolutionChain
+        startId={startId}
+        endId={endId}
+        onSelect={(pokemon) => void loadPokemon(pokemon.id)}
+        speciesUrl={`https://pokeapi.co/api/v2/pokemon-species/${activePokemon.id}/`}
+        currentId={activePokemon.id}
+      />
+    )}
+  </div>
+</div>
               </div>
 
-              <div className="flex min-h-0 flex-col gap-0 border-t-[4px] border-[#8b1020] bg-[#d92f4d] p-1.5 sm:p-2 md:border-l-[4px] md:border-t-0 md:p-2">
+              {/* Colonne de droite */}
+              <div className="flex min-h-0 min-w-0 flex-col gap-0 border-t-[4px] border-[#8b1020] bg-[#d92f4d] p-1.5 sm:p-2 md:border-l-[4px] md:border-t-0 md:p-2">
                 <div className="shrink-0">
                   <DexInfo activePokemon={activePokemon} />
                 </div>
@@ -333,14 +353,16 @@ export default function RegionDex({
                 <div className="mt-2 hidden shrink-0 flex-row items-stretch gap-2 lg:flex">
                   <button
                     onClick={openModalForActive}
-                    className="flex-1 border-2 border-white/20 bg-[#b0173e] px-2.5 py-2 font-mono text-[10px] font-black uppercase text-white hover:border-transparent hover:bg-[#ff698f]"
+                    disabled={!activePokemon}
+                    className="flex-1 border-2 border-white/20 bg-[#b0173e] px-2.5 py-2 font-mono text-[10px] font-black uppercase text-white hover:border-transparent hover:bg-[#ff698f] disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     Battle info
                   </button>
 
                   <button
                     onClick={() => setShowSimModal(true)}
-                    className="flex-1 border-2 border-white/20 bg-[#b0173e] px-2.5 py-2 font-mono text-[10px] font-black uppercase text-white hover:border-transparent hover:bg-[#ff698f]"
+                    disabled={!activePokemon}
+                    className="flex-1 border-2 border-white/20 bg-[#b0173e] px-2.5 py-2 font-mono text-[10px] font-black uppercase text-white hover:border-transparent hover:bg-[#ff698f] disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     Simulate
                   </button>
@@ -359,16 +381,16 @@ export default function RegionDex({
         </div>
       </div>
 
-      {openModals.map((m) => (
+      {openModals.map((modal) => (
         <DexDetailsModal
           startId={startId}
           endId={endId}
           loadPokemon={loadPokemon}
-          key={`modal-${m.uid}`}
-          activePokemon={m.data}
-          onClose={() => closeModal(m.uid)}
-          zIndex={m.z}
-          onFocus={() => bringModalToFront(m.uid)}
+          key={`modal-${modal.uid}`}
+          activePokemon={modal.data}
+          onClose={() => closeModal(modal.uid)}
+          zIndex={modal.z}
+          onFocus={() => bringModalToFront(modal.uid)}
         />
       ))}
 
