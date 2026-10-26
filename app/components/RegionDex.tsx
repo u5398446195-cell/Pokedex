@@ -294,8 +294,8 @@ export default function RegionDex({
 
                 <div>
                   {activePokemon && (
-                    <div className="px-2 pb-2 p-2">
-                      <p className={`text-center font-bold md:text-xl  text-white p-1 rounded-md`}  style={{ backgroundColor: desFcolor }}
+                    <div className="px-2 pb-2 p-2 max-h-15 overflow-y-auto" style={{ backgroundColor: desFcolor }}>
+                      <p className={`text-center  font-bold md:text-xl  text-white p-1 rounded-md`}  
           >
                         {activePokemon.description}
                       </p>
