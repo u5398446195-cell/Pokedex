@@ -7,6 +7,48 @@ import Image from "next/image";
 
 type BattleState = "idle" | "intro" | "fighting" | "finished";
 
+
+function LevelButton({
+  direction,
+  onHoldChange,
+}: {
+  direction: "left" | "right";
+  onHoldChange: (delta: number) => void;
+}) {
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const delta = direction === "left" ? -1 : 1;
+
+  const startHolding = () => {
+    onHoldChange(delta);
+    timerRef.current = setTimeout(() => {
+      intervalRef.current = setInterval(() => {
+        onHoldChange(delta);
+      }, 100);
+    }, 300);
+  };
+
+  const stopHolding = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (intervalRef.current) clearInterval(intervalRef.current);
+  };
+
+  return (
+    <button
+      type="button"
+      onMouseDown={startHolding}
+      onMouseUp={stopHolding}
+      onMouseLeave={stopHolding}
+      onTouchStart={startHolding}
+      onTouchEnd={stopHolding}
+      className="flex h-8 w-10 items-center justify-center rounded-lg border-2 border-[#1a1a1a] bg-[#ffcb05] font-black text-[#1a1a1a] shadow-[2px_2px_0_#1a1a1a] transition hover:bg-[#ffe040] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
+    >
+      {direction === "left" ? "◀" : "▶"}
+    </button>
+  );
+}
+
 type MoveInfo = {
   name: string;
   power: number | null;
@@ -57,26 +99,6 @@ const TYPE_CHART: Record<string, Record<string, number>> = {
   normal: { rock: 0.5, steel: 0.5, ghost: 0 },
 };
 
-const BASE_STAGE = new Set<number>([
-  1, 4, 7, 10, 13, 16, 19, 21, 23, 25, 27, 29, 32, 35, 37, 39, 41, 43,
-  46, 48, 50, 52, 54, 56, 58, 60, 63, 66, 69, 72, 74, 77, 79, 81, 83,
-  84, 86, 90, 92, 95, 96, 98, 100, 102, 104, 108, 109, 111, 113, 114,
-  115, 116, 118, 120, 122, 123, 124, 125, 126, 127, 128, 129, 131,
-  132, 133, 137, 138, 140, 142, 143, 147, 150, 151,
-]);
-const MID_STAGE = new Set<number>([
-  2, 5, 8, 11, 14, 17, 20, 22, 24, 26, 28, 30, 33, 36, 38, 40, 42, 44,
-  47, 49, 51, 53, 55, 57, 59, 61, 64, 67, 70, 73, 75, 78, 80, 82, 85,
-  87, 89, 91, 93, 97, 99, 101, 103, 105, 110, 112, 117, 119, 121,
-  130, 139, 141, 144, 145, 146, 149,
-]);
-
-function getRealisticLevel(id: number): number {
-  if (BASE_STAGE.has(id)) return 15;
-  if (MID_STAGE.has(id)) return 35;
-  return 50;
-}
-
 function getTypes(pokemon: PokemonDetails): string[] {
   if (!pokemon || !pokemon.types) return ["normal"];
   return pokemon.types.map((t: any) => {
@@ -113,6 +135,7 @@ function computeDamage(
   attacker: PokemonDetails,
   defender: PokemonDetails,
   move: MoveInfo | null,
+  attackerLevel: number = 50
 ): { damage: number; multiplier: number } {
   const atk = getStat(attacker, "ATK");
   const spa = getStat(attacker, "SP. ATK");
@@ -128,7 +151,7 @@ function computeDamage(
   const typeMult = move ? getTypeMultiplier(move.type, getTypes(defender)) : 1;
 
   const raw =
-    ((2 * 50) / 5 + 2) * basePower * (userOffense / Math.max(1, targetDefense)) / 50 + 2;
+    ((2 * attackerLevel) / 5 + 2) * basePower * (userOffense / Math.max(1, targetDefense)) / 50 + 2;
   const withType = raw * typeMult;
   const withRandom = withType * (0.85 + Math.random() * 0.15);
 
@@ -150,6 +173,11 @@ export default function SimulateBattle({
 }) {
   const [opponent, setOpponent] = useState<PokemonDetails | null>(null);
   const [showChooser, setShowChooser] = useState(false);
+  const [showLevelModal, setShowLevelModal] = useState(false);
+  
+  const [ownLevel, setOwnLevel] = useState<number>(50);
+  const [opponentLevel, setOpponentLevel] = useState<number>(50);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [battleState, setBattleState] = useState<BattleState>("idle");
   const [ownHp, setOwnHp] = useState(100);
@@ -168,6 +196,8 @@ export default function SimulateBattle({
   const logRef = useRef<HTMLDivElement | null>(null);
   const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const cancelledRef = useRef(false);
+
+  const areBothSelected = own !== null && opponent !== null;
 
   const filteredPokemonList = useMemo(() => {
     if (!searchQuery) return pokemonList.slice(0, 80);
@@ -197,12 +227,11 @@ export default function SimulateBattle({
   useEffect(() => {
     let cancelled = false;
 
-    async function findBest(pokemon: PokemonDetails): Promise<MoveInfo | null> {
+    async function findBest(pokemon: PokemonDetails, currentLevel: number): Promise<MoveInfo | null> {
       const moves = pokemon.moves ?? [];
       if (moves.length === 0) return null;
 
-      const maxLevel = getRealisticLevel(pokemon.id);
-      const legal = moves.filter((m) => m.level <= maxLevel);
+      const legal = moves.filter((m) => m.level <= currentLevel);
       if (legal.length === 0) return null;
 
       const candidates = [...legal].sort((a, b) => b.level - a.level).slice(0, 15);
@@ -226,16 +255,16 @@ export default function SimulateBattle({
       return valid[0];
     }
 
-    if (own) findBest(own).then((m) => !cancelled && setOwnBestMove(m));
+    if (own) findBest(own, ownLevel).then((m) => !cancelled && setOwnBestMove(m));
     else setOwnBestMove(null);
 
-    if (opponent) findBest(opponent).then((m) => !cancelled && setOpponentBestMove(m));
+    if (opponent) findBest(opponent, opponentLevel).then((m) => !cancelled && setOpponentBestMove(m));
     else setOpponentBestMove(null);
 
     return () => {
       cancelled = true;
     };
-  }, [own, opponent]);
+  }, [own, opponent, ownLevel, opponentLevel]);
 
   const pickFromList = useCallback(
     async (id: number) => {
@@ -382,7 +411,7 @@ export default function SimulateBattle({
 
         if (first === "own" && currentOppHp > 0) {
           const moveType = ownBestMove?.type || getPrimaryType(own);
-          const { damage, multiplier } = computeDamage(own, opponent, ownBestMove);
+          const { damage, multiplier } = computeDamage(own, opponent, ownBestMove, ownLevel);
           currentOppHp = Math.max(0, currentOppHp - damage);
 
           executeAttack("own", ownMoveLabel, moveType, damage, multiplier);
@@ -394,7 +423,7 @@ export default function SimulateBattle({
           logBatch.push(msg);
         } else if (first === "opp" && currentOwnHp > 0) {
           const moveType = opponentBestMove?.type || getPrimaryType(opponent);
-          const { damage, multiplier } = computeDamage(opponent, own, opponentBestMove);
+          const { damage, multiplier } = computeDamage(opponent, own, opponentBestMove, opponentLevel);
           currentOwnHp = Math.max(0, currentOwnHp - damage);
 
           executeAttack("opp", oppMoveLabel, moveType, damage, multiplier);
@@ -420,7 +449,7 @@ export default function SimulateBattle({
 
             if (second === "own" && currentOppHp > 0) {
               const moveType = ownBestMove?.type || getPrimaryType(own);
-              const { damage, multiplier } = computeDamage(own, opponent, ownBestMove);
+              const { damage, multiplier } = computeDamage(own, opponent, ownBestMove, ownLevel);
               currentOppHp = Math.max(0, currentOppHp - damage);
 
               executeAttack("own", ownMoveLabel, moveType, damage, multiplier);
@@ -432,7 +461,7 @@ export default function SimulateBattle({
               log2.push(msg);
             } else if (second === "opp" && currentOwnHp > 0) {
               const moveType = opponentBestMove?.type || getPrimaryType(opponent);
-              const { damage, multiplier } = computeDamage(opponent, own, opponentBestMove);
+              const { damage, multiplier } = computeDamage(opponent, own, opponentBestMove, opponentLevel);
               currentOwnHp = Math.max(0, currentOwnHp - damage);
 
               executeAttack("opp", oppMoveLabel, moveType, damage, multiplier);
@@ -454,7 +483,7 @@ export default function SimulateBattle({
     }, 600);
 
     timeoutsRef.current.push(introTimer);
-  }, [own, opponent, ownBestMove, opponentBestMove, clearAllTimers]);
+  }, [own, opponent, ownBestMove, opponentBestMove, ownLevel, opponentLevel, clearAllTimers]);
 
   const reset = useCallback(() => {
     cancelledRef.current = true;
@@ -466,6 +495,7 @@ export default function SimulateBattle({
     setLog([]);
     setWinner(null);
     setShowChooser(false);
+    setShowLevelModal(false);
     setParticles([]);
     setOwnAction("none");
     setOpponentAction("none");
@@ -562,7 +592,7 @@ export default function SimulateBattle({
               <div className="relative w-[220px] rounded-xl border-3 border-[#1a1a1a] bg-[#f8f8e8] px-3 py-1.5 shadow-[4px_4px_0_#1a1a1a] sm:w-[280px]">
                 <div className="flex items-center justify-between text-xs font-black uppercase tracking-wider text-black sm:text-sm">
                   <span className="truncate">{opponent.englishName}</span>
-                  <span className="ml-2 shrink-0">Lv{getRealisticLevel(opponent.id)}</span>
+                  <span className="ml-2 shrink-0">Lv{opponentLevel}</span>
                 </div>
                 <div className="mt-1 flex items-center gap-2">
                   <span className="text-[10px] font-black text-black">HP</span>
@@ -624,7 +654,7 @@ export default function SimulateBattle({
               <div className="relative w-[220px] rounded-xl border-3 border-[#1a1a1a] bg-[#f8f8e8] px-3 py-1.5 shadow-[4px_4px_0_#1a1a1a] sm:w-[280px]">
                 <div className="flex items-center justify-between text-xs font-black uppercase tracking-wider text-black sm:text-sm">
                   <span className="truncate">{own.englishName}</span>
-                  <span className="ml-2 shrink-0">Lv{getRealisticLevel(own.id)}</span>
+                  <span className="ml-2 shrink-0">Lv{ownLevel}</span>
                 </div>
                 <div className="mt-1 flex items-center gap-2">
                   <span className="text-[10px] font-black text-black">HP</span>
@@ -708,7 +738,69 @@ export default function SimulateBattle({
               </div>
             </div>
           )}
-        </div>
+
+          {/* Level Modifier Modal */}
+          {showLevelModal && areBothSelected && (
+            <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/80 p-3 backdrop-blur-sm sm:p-6">
+              <div className="flex w-full max-w-md flex-col overflow-hidden rounded-2xl border-4 border-[#1a1a1a] bg-[#f8f8e8] shadow-[8px_8px_0_#1a1a1a]">
+                <div className="flex shrink-0 items-center justify-between border-b-4 border-[#1a1a1a] bg-[#c71938] px-4 py-3">
+                  <h3 className="text-base font-black uppercase tracking-widest text-white sm:text-lg">
+                    Change levels
+                  </h3>
+                  <button
+                    onClick={() => setShowLevelModal(false)}
+                    className="flex h-7 w-7 items-center justify-center rounded-lg border-2 border-white/60 bg-white/20 text-base font-black text-white transition hover:bg-white/40 active:scale-90"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <div className="flex flex-col gap-6 p-5">
+                  {/* Niveau Mon Pokémon */}
+                  <div className="flex flex-col gap-2">
+                    <div className="flex justify-between text-xs font-black uppercase text-[#1a1a1a]">
+                      <span>{own?.englishName}</span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-xl border-2 border-[#1a1a1a] bg-white px-3 py-2">
+                      <LevelButton
+                        direction="left"
+                        onHoldChange={(delta) => setOwnLevel((prev) => Math.max(1, Math.min(100, prev + delta)))}
+                      />
+                      <span className="font-mono text-sm font-black text-[#1a1a1a]">Lv {ownLevel}</span>
+                      <LevelButton
+                        direction="right"
+                        onHoldChange={(delta) => setOwnLevel((prev) => Math.max(1, Math.min(100, prev + delta)))}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Niveau Adversaire */}
+                  <div className="flex flex-col gap-2">
+                    <div className="flex justify-between text-xs font-black uppercase text-[#1a1a1a]">
+                      <span>{opponent?.englishName}</span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-xl border-2 border-[#1a1a1a] bg-white px-3 py-2">
+                      <LevelButton
+                        direction="left"
+                        onHoldChange={(delta) => setOpponentLevel((prev) => Math.max(1, Math.min(100, prev + delta)))}
+                      />
+                      <span className="font-mono text-sm font-black text-[#1a1a1a]">Lv {opponentLevel}</span>
+                      <LevelButton
+                        direction="right"
+                        onHoldChange={(delta) => setOpponentLevel((prev) => Math.max(1, Math.min(100, prev + delta)))}
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setShowLevelModal(false)}
+                    className="mt-2 rounded-xl border-3 border-[#1a1a1a] bg-[#ffcb05] py-2 text-xs font-black uppercase tracking-wider text-[#1a1a1a] shadow-[4px_4px_0_#1a1a1a] transition hover:bg-[#ffe040] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
+                  >
+                    Valider
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}</div>
 
         {/* LOG DRAWER */}
         {showLog && (
@@ -740,6 +832,18 @@ export default function SimulateBattle({
               : battleState === "finished"
                 ? "↻ Fight Again"
                 : "⚔ Start Battle"}
+          </button>
+
+          <button
+            onClick={() => areBothSelected && setShowLevelModal(true)}
+            disabled={!areBothSelected}
+            className={`rounded-xl border-3 border-[#1a1a1a] px-4 py-2.5 text-xs font-black uppercase tracking-wider shadow-[4px_4px_0_#1a1a1a] transition sm:text-sm ${
+              areBothSelected
+                ? "bg-sky-400 text-black hover:bg-sky-300 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
+                : "cursor-not-allowed bg-stone-300 text-stone-500 shadow-none opacity-65"
+            }`}
+          >
+           Levels
           </button>
 
           {opponent && battleState !== "fighting" && battleState !== "intro" && (

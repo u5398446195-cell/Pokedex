@@ -57,7 +57,7 @@ export function DexHeader({
           type="button"
           aria-label="Ouvrir le menu"
           aria-expanded={undefined}
-          className="flex items-center justify-center font-black text-white w-10 bg-red-900 rounded-md p-1 h-10"
+          className="flex items-center justify-center hover:bg-red-700 hover:scale-105 duration-500 font-black text-white w-10 bg-red-900 rounded-md p-1 h-10  active:translate-y-px"
           onClick={() => setOpenMenu(true)}
         >
           <Image
