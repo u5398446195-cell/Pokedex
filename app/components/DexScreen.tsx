@@ -18,7 +18,7 @@ export function DexScreen({
   error: string;
 }) {
   return (
-    <div className="dex-screen relative flex h-[clamp(220px,30vh,400px)] w-full items-center justify-center overflow-hidden border-[8px] border-[#ececec] bg-[#b8e8e9] shadow-[inset_0_0_0_2px_#8f8f8f,0_18px_32px_rgba(79,4,17,0.25)] sm:h-[clamp(240px,34vh,430px)] sm:border-[10px] md:h-[clamp(280px,38vh,470px)] lg:h-[clamp(310px,42vh,500px)]">
+    <div className="dex-screen relative flex h-[clamp(220px,30vh,400px)] w-full items-center justify-center overflow-hidden border-[8px] border-[#ececec] bg-[#b8e8e9]  sm:h-[clamp(240px,34vh,430px)] sm:border-[10px] md:h-[clamp(280px,38vh,470px)] lg:h-[clamp(310px,42vh,500px)]">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(255,255,255,0.75),transparent_35%),linear-gradient(160deg,rgba(255,255,255,0.24),transparent_35%)]" />
       <div className="dex-vignette pointer-events-none absolute inset-0" />
       <div className="dex-scanlines pointer-events-none absolute inset-0" />

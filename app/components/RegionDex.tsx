@@ -25,6 +25,7 @@ type RegionDexProps = {
   endId: number;
   count: number;
   accent?: string;
+  desFcolor: string;
   statBarColor?: string;
   frenchNames?: Record<number, string>;
 };
@@ -35,6 +36,7 @@ export default function RegionDex({
   endId,
   count,
   accent = "#f62d5f",
+  desFcolor,
   statBarColor = "bg-[#ffdc74]",
   frenchNames = {},
 }: RegionDexProps) {
@@ -293,17 +295,17 @@ export default function RegionDex({
                 <div>
                   {activePokemon && (
                     <div className="px-2 pb-2 p-2">
-                      <p className="text-center font-bold md:text-xl bg-[#770a25] text-white p-1 rounded-md">
+                      <p className={`text-center font-bold md:text-xl  text-white p-1 rounded-md`}  style={{ backgroundColor: desFcolor }}
+          >
                         {activePokemon.description}
                       </p>
                     </div>
                   )}
-                </div>
-
-                <div className="hidden shrink-0 md:block">
+                </div>             <div className="hidden shrink-0 md:block">
                   {activePokemon && (
                     <div className="px-2 pb-2 p-2">
                       <EvolutionChain
+                        startId={startId}
                         endId={endId}
                         onSelect={(pokemon) => void loadPokemon(pokemon.id)}
                         speciesUrl={`https://pokeapi.co/api/v2/pokemon-species/${activePokemon.id}/`}
@@ -359,6 +361,7 @@ export default function RegionDex({
 
       {openModals.map((m) => (
         <DexDetailsModal
+          startId={startId}
           endId={endId}
           loadPokemon={loadPokemon}
           key={`modal-${m.uid}`}

@@ -14,6 +14,7 @@ export default function KantoDex() {
       startId={startId}
       count={KANTO_COUNT}
       accent="#d51e3c"
+      desFcolor="#710808"
       statBarColor="bg-[#ffdc74]"
       frenchNames={KANTO_FRENCH_NAMES}
     />

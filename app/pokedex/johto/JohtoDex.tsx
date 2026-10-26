@@ -34,8 +34,9 @@ export default function JohtoDex() {
       startId={152}
       count={JOHTO_COUNT}
       accent="#7C9A52"
+      desFcolor="#062148"
       statBarColor="bg-green-400"
       frenchNames={JOHTO_FRENCH_NAMES}
     />
-  );
-}
+  ); 
+} 

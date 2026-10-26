@@ -94,12 +94,14 @@ export function DexDetailsModal({
   activePokemon,
   onClose,
   endId,
+  startId,
   zIndex = 100,
   onFocus,
 }: {
   loadPokemon: (id: number) => Promise<void>;
   activePokemon: PokemonDetails | null;
   endId: number;
+  startId: number;
   onClose: () => void;
   zIndex?: number;
   onFocus?: () => void;
@@ -333,6 +335,7 @@ export function DexDetailsModal({
 
               <div className="rounded border-2  border-[#1a1a1a] bg-white p-3 shadow-[3px_3px_0_rgba(0,0,0,0.15)]">
                                   <EvolutionChain2 
+                                    startId={startId}
                                     endId={ endId}
                                     onSelect={(pokemon) => void loadPokemon(pokemon.id)}
                                     speciesUrl={`https://pokeapi.co/api/v2/pokemon-species/${activePokemon.id}/`}
@@ -450,14 +453,23 @@ export function DexDetailsModal({
                       <p className="truncate text-sm font-black uppercase tracking-wide text-[#333]">
                         {formatName(move.name)}
                       </p>
-                      <div className="ml-2 shrink-0 text-[10px] font-black tracking-wider text-[#999]">
+                      
+                      <div className="flex flex-col items-center">
+                      <div className="ml-2 shrink-0 text-[10px] font-black tracking-wider text-[#333]">
                         {labelText}
                       </div>
+
+                     <span className="ml-2 shrink-0 text-lg text-[#888] transition-transform group-hover:translate-x-1 group-hover:text-[#333]">
+                      →
+                    </span>
+
+                      </div>
+                      
                     </button>
                   );
                 })
               ) : (
-                <p className="py-4 text-center text-[#999]">No moves</p>
+                <p className="py-4 text-center text-[#999]">No moves found for this pokemon.</p>
               )}
             </div>
           )}
@@ -582,7 +594,7 @@ function AbilityModal({
           } catch {}
           onFocus?.();
         }}
-        className={`flex cursor-grab touch-none items-center justify-between border-b-4 border-[#1a1a1a] bg-gradient-to-br ${typeGradient} px-4 py-3 select-none`}
+        className={`flex relative cursor-grab touch-none items-center justify-between border-b-4 border-[#1a1a1a] bg-gradient-to-br ${typeGradient} px-4 py-3 select-none`}
       >
         <div className="min-w-0">
           <p className="text-[10px] font-black uppercase tracking-widest text-white/70">
@@ -600,7 +612,7 @@ function AbilityModal({
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto bg-[#fffacd] p-4">
+      <div className="flex-1 overflow-y-auto bg-[#fffacd] px-3 py-1">
         {loading ? (
           <div className="flex flex-col items-center gap-3 py-6 text-[#666]">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#c8b860] border-t-transparent" />
@@ -608,16 +620,17 @@ function AbilityModal({
           </div>
         ) : (
           <>
-            <p className="text-sm leading-relaxed text-[#333]">
+            <p className="text-lg max-h-32 overflow-auto px-3 leading-relaxed text-[#333] ">
               {details?.effect ?? "No description available."}
             </p>
+            <div className="absolute left-0 border-b-2 border-black -mt-5 bg-gradient-to-b from-black/0 to-black/30 via-black/10  w-full  h-5  flex items-end"></div>
 
             {details?.generation && (
               <div className="mt-4 rounded border-2 border-[#1a1a1a] bg-white/60 p-2 shadow-[2px_2px_0_rgba(0,0,0,0.15)]">
                 <p className="text-[10px] font-black uppercase tracking-wider text-[#666]">
                   Introduced
                 </p>
-                <p className="mt-1 text-[11px] font-bold uppercase text-[#444]">
+                <p className="mt-1 text-[15px] font-bold uppercase text-[#444]">
                   {details.generation.replace("generation-", "Generation ")}
                 </p>
               </div>
@@ -778,9 +791,6 @@ function MoveModal({
         className="flex cursor-grab touch-none items-center justify-between border-b-4 border-[#1a1a1a] bg-gradient-to-br from-[#6060d0] to-[#3030a0] px-4 py-3 text-white select-none"
       >
         <div className="min-w-0">
-          <p className="text-[10px] font-black uppercase tracking-widest text-white/70">
-            Move
-          </p>
           <h3 className="truncate text-lg font-black uppercase tracking-wide text-white drop-shadow-md">
             {formatName(move.name)}
           </h3>
@@ -864,7 +874,7 @@ function MoveModal({
               <p className="mb-1 text-[10px] font-black uppercase tracking-wider text-[#666]">
                 Effect
               </p>
-              <p className="text-[12px] leading-relaxed text-[#333]">
+              <p className="text-lg leading-relaxed text-[#333]">
                 {details?.effect ?? "No effect description available."}
               </p>
             </div>

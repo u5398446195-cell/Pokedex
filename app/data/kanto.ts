@@ -1,7 +1,6 @@
 export const KANTO_COUNT = 151;
 export const API_BASE = "https://pokeapi.co/api/v2";
-// French aliases are kept locally so the search can work in both languages
-// without making 151 extra API requests just to build autocomplete.
+
 export const KANTO_FRENCH_NAMES: Record<number, string> = {
   1: "Bulbizarre", 2: "Herbizarre", 3: "Florizarre", 4: "Salamèche", 5: "Reptincel", 6: "Dracaufeu",
   7: "Carapuce", 8: "Carabaffe", 9: "Tortank", 10: "Chenipan", 11: "Chrysacier", 12: "Papilusion",

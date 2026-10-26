@@ -30,11 +30,13 @@ type EvolutionPokemon = {
 export default function EvolutionChain({
   onClose,
   endId,
+  startId,
   speciesUrl,
   currentId,
   onSelect,
 }: {
   endId: number;
+  startId: number;
   onClose: () => void;
   speciesUrl: string;
   currentId: number;
@@ -184,7 +186,7 @@ export default function EvolutionChain({
   <div className="max-h-[55vh] overflow-y-auto border-4 border-[#211f1b] bg-[#d9e5bd] p-3 sm:p-4">
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       {evolutions.map((pokemon, index) => {
-        const unavailable = pokemon.id > endId;
+        const unavailable = pokemon.id > endId || startId > pokemon.id; 
         const isCurrent = pokemon.id === currentId;
         const isSelecting = pokemon.id === selectingId;
         const isNotCurrent = pokemon.id !== currentId;
@@ -208,7 +210,7 @@ export default function EvolutionChain({
             } ${
               isCurrent
                 ? "bg-[#f3ca3e]  "
-                : "bg-[#f6edda] hover:bg-[#6bb6eb] active:bg-[#8bbce0] cursor-pointer"
+                : `bg-[#f6edda] hover:bg-[#6bb6eb] active:bg-[#8bbce0] ${unavailable? "" : "cursor-pointer" }`
             }`} 
           >  
             <span className="absolute -left-1 -top-1 bg-[#211f1b] px-1.5 py-0.5 font-mono text-[9px] text-[#fff4d4]">
@@ -226,7 +228,7 @@ export default function EvolutionChain({
 
             <span className="mt-3 min-w-0 flex-1 font-mono">
               <span className="block  truncate text-sm font-black uppercase text-[#211f1b]">
-                <p className="border-b-3 border-red-800">{pokemon.name}</p>
+                <p className={isCurrent ? "border-b-3 border-red-900" : ""}>{pokemon.name}</p>
               </span>
 
               {pokemon.method && (
@@ -256,7 +258,7 @@ export default function EvolutionChain({
             {unavailable && (
               <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-black/80">
                 <span className="text-xs font-black uppercase tracking-wider text-white">
-                  {pokemon.name} ({pokemon.id}) ne fait pas partie de ce Pokédex
+                  {pokemon.name} ({pokemon.id})is not in this Pokedex
                 </span>
               </div>
             )}

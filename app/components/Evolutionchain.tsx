@@ -34,8 +34,10 @@ export default function EvolutionChain({
   currentId,
   onSelect,
   endId,
+  startId,
 }: {
-   endId: number;
+  startId:number;
+  endId: number;
   speciesUrl: string;
   currentId: number;
   onSelect: (pokemon: PokemonSummary) => void;
@@ -122,7 +124,7 @@ export default function EvolutionChain({
 <section className="space-y-1 h-52 overflow-y-auto">
   <div className="flex flex-col items-center h-full space-y-1">
     {evolutions.map((pokemon) => {
-      const unavailable = pokemon.id > endId;
+      const unavailable = pokemon.id > endId || startId > pokemon.id; 
 
       return (
         <div
@@ -174,7 +176,7 @@ export default function EvolutionChain({
           {unavailable && (
             <div className="absolute inset-0 z-10 flex items-center justify-center bg-neutral-400/60">
               <span className="text-xs font-black uppercase tracking-wider text-white">
-                {pokemon.name}({pokemon.id}) ne fait pas parti de ce pokedex
+                {pokemon.name}({pokemon.id}) is not in this Pokedex
               </span>
             </div>
           )}
