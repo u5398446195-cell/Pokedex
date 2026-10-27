@@ -12,6 +12,7 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen relative bg-gradient-to-b from-slate-900 via-slate-900 to-blue-950 text-white overflow-x-hidden overflow-y-auto font-sans selection:bg-blue-600 selection:text-white">
+  
   <Menu openMenu={openMenu} setOpenMenu={setOpenMenu}/> 
 
   {/* DÉCORATION 1 : CUBE NOIR AU FOND À DROITE */}
@@ -20,7 +21,7 @@ export default function HomePage() {
 
 
   {/* DÉCORATION 2 : TRACES DE GRIFFES POKÉMON EN FOND */}
-  <div className="absolute left-4 top-1/2 -translate-y-1/2 opacity-20 pointer-events-none z-3 flex gap-3 rotate-[-25deg]">
+  <div className="absolute z-1 left-4 top-1/2 -translate-y-1/2 opacity-20 pointer-events-none z-3 flex gap-3 rotate-[-25deg]">
     <div className="w-2 sm:w-3 h-64 sm:h-96 bg-gradient-to-b from-cyan-400 via-blue-500 to-transparent rounded-full blur-[1px]"></div>
     <div className="w-2 sm:w-3 h-72 sm:h-[420px] bg-gradient-to-b from-cyan-400 via-blue-500 to-transparent rounded-full blur-[1px]"></div>
     <div className="w-2 sm:w-3 h-60 sm:h-80 bg-gradient-to-b from-cyan-400 via-blue-500 to-transparent rounded-full blur-[1px]"></div>
@@ -46,18 +47,10 @@ export default function HomePage() {
      
      
 
-      {/* Menu central avec pillule active sur Home */}
-      <div className="hidden lg:flex items-center space-x-1 bg-white/5 p-1 rounded-full border border-white/10 text-xs">
-        <button className="bg-blue-600 text-white px-3.5 py-1 rounded-full font-semibold">Home</button>
-        {/* POKEDEX SANS ALERT */}
-        <button className="hover:text-white text-slate-300 px-3.5 py-1 rounded-full font-medium transition-colors">Pokedex</button>
-        <button onClick={() => alert("Fonctionnalité en cours de développement 🚀")} className="hover:text-white text-slate-300 px-3.5 py-1 rounded-full font-medium transition-colors">Simulate Battle</button>
-        <button onClick={() => alert("Fonctionnalité en cours de développement 🚀")} className="hover:text-white text-slate-300 px-3.5 py-1 rounded-full font-medium transition-colors">Poke News</button>
-        <button onClick={() => alert("Fonctionnalité en cours de développement 🚀")} className="hover:text-white text-slate-300 px-3.5 py-1 rounded-full font-medium transition-colors">About</button>
-      </div>
+      
     </div>
 
-    {/* Recherche + Bouton Profil/Menu */}
+    {/* Recherche + Bouton Menu */}
     <div className="flex items-center space-x-3">
 
       <button
@@ -104,7 +97,7 @@ export default function HomePage() {
        
 
         <button className="bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs px-5 py-3 rounded-xl flex items-center gap-2 shadow-lg shadow-blue-600/30 transition-all active:scale-95">
-          <Link href="/pokedex/kanto"><span>Explorer le Pokédex</span>
+          <Link href="/pokedex"><span>Explorer le Pokédex</span>
           <span>→</span></Link>
         </button>
         
@@ -134,7 +127,7 @@ export default function HomePage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
 
-<Card link="/pokedex/kanto" text="Un pokedex en ligne fidèle à" header="Pokedex" src="/206263.png" alt='pokedex'></Card>
+<Card link="/pokedex" text="Un pokedex en ligne fidèle à" header="Pokedex" src="/206263.png" alt='pokedex'></Card>
        
 
         {/* CARTE 2 : SIMULATE BATTLE */}
@@ -171,16 +164,11 @@ export default function HomePage() {
     {/* FOOTER */}
     <footer className="pt-6 border-t border-white/10 flex flex-col sm:flex-row justify-between items-center text-[11px] text-slate-400 gap-4">
       <div className="flex items-center space-x-2">
-        <div className="w-5 h-5 bg-blue-600 rounded flex items-center justify-center font-bold text-white text-[10px]">P</div>
         <span className="font-bold text-slate-200">Pokédex</span>
         <span className="text-slate-400 ml-2">Le guide complet pour dresseurs</span>
       </div>
 
-      <div className="flex space-x-5 text-slate-400">
-        <span onClick={() => alert("Fonctionnalité en cours de développement 🚀")} className="hover:text-white cursor-pointer transition-colors">𝕏</span>
-        <span onClick={() => alert("Fonctionnalité en cours de développement 🚀")} className="hover:text-white cursor-pointer transition-colors">💬</span>
-        <span onClick={() => alert("Fonctionnalité en cours de développement 🚀")} className="hover:text-white cursor-pointer transition-colors">💻</span>
-      </div>
+    
     </footer>
 
   </div>
