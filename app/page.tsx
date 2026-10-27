@@ -151,8 +151,8 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/60 to-transparent z-10"></div>
           <Image src="/globe.svg" width={80} height={80} alt="about" className="absolute top-2 right-2 opacity-25 group-hover:scale-110 group-hover:opacity-40 transition-all duration-500" />
           <div className="relative z-20 space-y-1 mt-auto">
-            <h4 className="text-sm font-black text-white tracking-wide group-hover:text-blue-400 transition-colors">Pokemon cards</h4>
-            <p className="text-[10px] text-slate-300">En savoir plus sur le projet et l'équipe créative.</p>
+            <h4 className="text-sm font-black text-white tracking-wide group-hover:text-blue-400 transition-colors">Pokemon Quiz</h4>
+            <p className="text-[10px] text-slate-300">Quiz pokemon</p>
           </div>
         </div>
 

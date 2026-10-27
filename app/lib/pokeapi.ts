@@ -1,4 +1,3 @@
-
 export type PokemonSummary = {
   id: number;
   englishName: string;
@@ -61,8 +60,6 @@ const API = "https://pokeapi.co/api/v2";
 const cache: Record<string, any> = {};
 
 // Groupe de versions préféré pour chaque génération.
-// Les solutions de repli permettent de gérer les Pokémon
-// qui n'existent pas encore dans les jeux les plus récents.
 const VERSION_GROUPS: Record<number, string[]> = {
   1: ["red-blue", "yellow"],
   2: ["gold-silver", "crystal"],
@@ -92,16 +89,12 @@ async function cachedFetch(url: string): Promise<any> {
 
 function getPreferredVersionGroups(generation: number): string[] {
   const groups = VERSION_GROUPS[generation];
-
   if (groups) return groups;
-
-  // Sécurité pour les générations non répertoriées.
   return VERSION_GROUPS[9];
 }
 
 export async function fetchPokemonDetails(
   id: number,
-  frenchNames: Record<number, string> = {},
 ): Promise<PokemonDetails> {
   const [pokemon, species] = await Promise.all([
     cachedFetch(`${API}/pokemon/${id}`),
@@ -125,8 +118,12 @@ export async function fetchPokemonDetails(
     (entry: any) => entry.language.name === "en",
   );
 
-  // Choisit les groupes de versions en fonction de la génération
-  // d'origine du Pokémon.
+  // Récupération du vrai nom français depuis l'API
+  const frenchNameEntry = species.names?.find(
+    (entry: any) => entry.language.name === "fr",
+  );
+
+  // Choisit les groupes de versions en fonction de la génération d'origine
   const generationNumber = Number(
     species.generation?.name?.replace("generation-", ""),
   );
@@ -139,8 +136,6 @@ export async function fetchPokemonDetails(
   for (const moveEntry of pokemon.moves ?? []) {
     const details = moveEntry.version_group_details ?? [];
 
-    // On cherche d'abord une version compatible avec la génération
-    // du Pokémon, puis on utilise une autre version disponible.
     const levelUpDetails = details.filter(
       (detail: any) =>
         detail.move_learn_method?.name === "level-up",
@@ -165,7 +160,6 @@ export async function fetchPokemonDetails(
             b.version_group?.name,
           );
 
-          // Préfère les groupes connus, puis les autres.
           if (indexA === -1 && indexB === -1) return 0;
           if (indexA === -1) return 1;
           if (indexB === -1) return -1;
@@ -194,7 +188,7 @@ export async function fetchPokemonDetails(
   return {
     id,
     englishName: pokemon.name,
-    frenchName: frenchNames[id] ?? pokemon.name,
+    frenchName: frenchNameEntry?.name ?? pokemon.name,
     artwork:
       pokemon.sprites?.other?.["official-artwork"]?.front_default ??
       pokemon.sprites?.front_default ??

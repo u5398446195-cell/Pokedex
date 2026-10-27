@@ -13,7 +13,7 @@ export default function HomePage() {
     const [openMenu, setOpenMenu] = useState(false);
 
   return (
-    <div className="bg-slate-100 relative h-screen overflow-y-auto flex flex-col items-center">
+    <div className="bg-slate-100 relative h-screen w-screen  flex flex-col items-center">
   <Menu openMenu={openMenu} setOpenMenu={setOpenMenu}/> 
 
 <div className="w-full fixed opacity-30 bottom-1 overflow-hidden leading-none">
