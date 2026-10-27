@@ -124,7 +124,7 @@ export default function Quiz() {
             try {
                 setLoading(true);
                 const data = await fetchPokemonDetails(pokemonId);
-                setPokemonName(language === "fr" ? data.frenchName : (data.englishName || data.name));
+                setPokemonName(language === "fr" ? data.frenchName : (data.englishName ));
                 setPokemonPic(data.artwork);
             } catch (error) {
                 console.error("Erreur:", error);
