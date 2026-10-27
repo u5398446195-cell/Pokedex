@@ -270,71 +270,70 @@ export default function RegionDex({
             style={{ backgroundColor: accent }}
           >
             <div className="grid min-h-0 grid-cols-1 md:h-full md:grid-cols-[minmax(0,1.6fr)_minmax(260px,0.9fr)]">
-              {/* Colonne de gauche */}
-              <div className="flex min-h-[55dvh] min-w-0 flex-col md:min-h-0">
-                {/* Boutons mobiles */}
-                <div className="flex shrink-0 flex-row gap-2 px-2 pt-2 lg:hidden">
-                  <button
-                    onClick={openModalForActive}
-                    disabled={!activePokemon}
-                    className="flex-1 border-2 border-white/20 bg-[#b0173e] px-2 py-2 font-mono text-xs font-black uppercase text-white hover:bg-[#ff698f] disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    Battle info
-                  </button>
+     {/* Colonne de gauche */}
+<div className="flex min-w-0 flex-col md:h-full md:min-h-0">
+  {/* Boutons mobiles */}
+  <div className="flex shrink-0 flex-row gap-2 px-2 pt-2 lg:hidden">
+    <button
+      onClick={openModalForActive}
+      disabled={!activePokemon}
+      className="flex-1 border-2 border-white/20 bg-[#b0173e] px-2 py-2 font-mono text-xs font-black uppercase text-white hover:bg-[#ff698f] disabled:cursor-not-allowed disabled:opacity-40"
+    >
+      Battle info
+    </button>
 
-                  <button
-                    onClick={() => setShowSimModal(true)}
-                    disabled={!activePokemon}
-                    className="flex-1 border-2 border-white/20 bg-[#b0173e] px-2 py-2 font-mono text-xs font-black uppercase text-white hover:bg-[#ff698f] disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    Simulate
-                  </button>
-                </div>
+    <button
+      onClick={() => setShowSimModal(true)}
+      disabled={!activePokemon}
+      className="flex-1 border-2 border-white/20 bg-[#b0173e] px-2 py-2 font-mono text-xs font-black uppercase text-white hover:bg-[#ff698f] disabled:cursor-not-allowed disabled:opacity-40"
+    >
+      Simulate
+    </button>
+  </div>
 
-               <div className="flex min-h-0 flex-1 flex-col">
-  {/* Écran Pokémon */}
- <div className="relative h-[clamp(220px,30vh,400px)] shrink-0 px-1.5 pb-1.5 pt-1 sm:h-[clamp(240px,34vh,430px)] sm:px-2 sm:pb-2 md:h-auto md:min-h-0 md:flex-1">
-  <DexScreen
-    activePokemon={activePokemon}
-    loading={loading || loadingDetails}
-    error={error}
-  />
-</div>
-
-  {/* Description juste sous l'écran */}
-  {activePokemon && (
-    <div className="shrink-0 px-2 pb-2">
-      <div className="relative">
-        <p
-          className="max-h-24 overflow-y-auto whitespace-pre-wrap break-words rounded-md p-2 text-center text-lg font-bold leading-relaxed text-white [scrollbar-width:thin] sm:text-base"
-          style={{ backgroundColor: desFcolor }}
-        >
-          {activePokemon.description}
-        </p>
-
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-6 rounded-b-md bg-gradient-to-t from-black/40 to-transparent"
-        />
-      </div>
-    </div>
-  )}
-
-  {/* Évolutions sur ordinateur */}
-  <div className="hidden shrink-0 px-2 pb-2 md:block">
-    {activePokemon && (
-      <EvolutionChain
-        startId={startId}
-        endId={endId}
-        onSelect={(pokemon) => void loadPokemon(pokemon.id)}
-        speciesUrl={`https://pokeapi.co/api/v2/pokemon-species/${activePokemon.id}/`}
-        currentId={activePokemon.id}
+  {/* Écran et contenu : hauteur fixe sur mobile */}
+  <div className="flex min-w-0 flex-col md:min-h-0 md:flex-1">
+    <div className="relative h-[260px] shrink-0 px-1.5 pb-1.5 pt-1 sm:h-[300px] sm:px-2 sm:pb-2 md:h-auto md:min-h-0 md:flex-1">
+      <DexScreen
+        activePokemon={activePokemon}
+        loading={loading || loadingDetails}
+        error={error}
       />
+    </div>
+
+    {/* Description directement sous l'écran */}
+    {activePokemon && (
+      <div className="shrink-0 px-2 pb-2">
+        <div className="relative">
+          <p
+            className="max-h-22 overflow-y-auto whitespace-pre-wrap break-words rounded-md p-2 text-center text-base font-bold leading-relaxed text-white [scrollbar-width:thin]"
+            style={{ backgroundColor: desFcolor }}
+          >
+            {activePokemon.description}
+          </p>
+
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-6 rounded-b-md bg-gradient-to-t from-black/40 to-transparent"
+          />
+        </div>
+      </div>
     )}
+
+    {/* Évolutions sur ordinateur */}
+    <div className="hidden shrink-0 px-2 pb-2 md:block">
+      {activePokemon && (
+        <EvolutionChain
+          startId={startId}
+          endId={endId}
+          onSelect={(pokemon) => void loadPokemon(pokemon.id)}
+          speciesUrl={`https://pokeapi.co/api/v2/pokemon-species/${activePokemon.id}/`}
+          currentId={activePokemon.id}
+        />
+      )}
+    </div>
   </div>
 </div>
-              </div>
-
               {/* Colonne de droite */}
               <div className="flex min-h-0 min-w-0 flex-col gap-0 border-t-[4px] border-[#8b1020] bg-[#d92f4d] p-1.5 sm:p-2 md:border-l-[4px] md:border-t-0 md:p-2">
                 <div className="shrink-0">
