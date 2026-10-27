@@ -28,7 +28,8 @@ export default function HomePage() {
 
 
 
-      <div className="w-full h-15 flex items-center justify-end px-4 shadow-md"><button
+      <div className="w-full h-15 flex items-center justify-end px-4 shadow-md">
+        <button
         type="button"
         className=" bg-black/20 hover:bg-black border border-white/10 w-10 h-10 flex items-center justify-center rounded-full hover:scale-105 active:scale-95 transition-all shadow-lg"
         onClick={() => setOpenMenu(true)}

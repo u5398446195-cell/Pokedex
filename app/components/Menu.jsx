@@ -6,7 +6,7 @@ export default function Menu({ openMenu, setOpenMenu }) {
   return (
     <div
       className={[
-        "bg-red-800 fixed absolute overflow-hidden p-2 z-50  h-screen right-1 w-70 md:w-100 duration-700",
+        "bg-red-800 top-0 text-white fixed absolute overflow-hidden p-2 z-50  h-screen right-1 w-70 md:w-100 duration-700",
         openMenu ? "translate-x-[1%]" : "translate-x-[140%]",
       ].join(" ")}
       style={{ backgroundImage: "url('/IMG_2268.PNG')" }}
@@ -81,7 +81,7 @@ export default function Menu({ openMenu, setOpenMenu }) {
           />
         </div>
 
-        <div className="w-[95%] h-64 z-11 relative overflow-y-hidden bg-red-700 p-2 flex flex-col items-center space-y-3 border-3 rounded-md">
+        <div className="w-[95%] h-fit h-64 z-11 relative overflow-y-hidden bg-red-700 p-2 flex flex-col items-center space-y-3 border-3 border-white rounded-md">
           <h1 className="font-black">
             Thank you for using our app!
           </h1>
