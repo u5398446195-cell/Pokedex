@@ -95,6 +95,7 @@ function getPreferredVersionGroups(generation: number): string[] {
 
 export async function fetchPokemonDetails(
   id: number,
+  frenchNames: Record<number, string> = {}, // <--- Repris en optionnel pour éviter l'erreur TypeScript
 ): Promise<PokemonDetails> {
   const [pokemon, species] = await Promise.all([
     cachedFetch(`${API}/pokemon/${id}`),
@@ -188,7 +189,8 @@ export async function fetchPokemonDetails(
   return {
     id,
     englishName: pokemon.name,
-    frenchName: frenchNameEntry?.name ?? pokemon.name,
+    // Priorité au dictionnaire s'il est fourni, sinon l'API, sinon l'anglais
+    frenchName: frenchNames[id] ?? frenchNameEntry?.name ?? pokemon.name,
     artwork:
       pokemon.sprites?.other?.["official-artwork"]?.front_default ??
       pokemon.sprites?.front_default ??
