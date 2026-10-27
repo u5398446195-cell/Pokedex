@@ -1,81 +1,57 @@
-
 import Button1 from "./Button.jsx";
 import Image from "next/image";
 
 export default function Menu({ openMenu, setOpenMenu }) {
+  if (!openMenu) return null;
+
   return (
     <div
-      className={[
-        "bg-red-800 top-0 text-white fixed absolute overflow-hidden p-2 z-50  h-screen right-1 w-70 md:w-100 duration-700",
-        openMenu ? "translate-x-[1%]" : "translate-x-[140%]",
-      ].join(" ")}
+      className="bg-red-800 top-0 text-white fixed absolute overflow-hidden p-2 z-50 h-screen right-1 w-70 md:w-100"
       style={{ backgroundImage: "url('/IMG_2268.PNG')" }}
     >
-      <div
-        className={[
-          "absolute inset-0 pointer-events-none duration-2000 transition-all",
-          openMenu ? "bg-red-800/60" : "bg-red-800/100",
-        ].join(" ")}
-      />
+      <div className="absolute inset-0 pointer-events-none bg-red-800/60" />
 
       <div className="w-full p-4 flex flex-col space-y-3 items-center">
         <div className="flex w-full justify-between z-2 items-center">
           <Image
             src="/pokeball-pokemon-svgrepo-com.svg"
-            className={[
-              "hover:rotate-360 duration-500",
-              openMenu ? "rotate-0" : "rotate-360",
-            ].join(" ")}
+            className=""
             alt="Pokeball"
             width={30}
             height={30}
           />
 
-          <p
-            className={[
-              "font-semibold text-lg duration-2000",
-              openMenu ? "text-white" : "text-red-400 scale-120",
-            ].join(" ")}
-          >
+          <p className="font-semibold text-lg text-white">
             POKE MENU
           </p>
 
           <button
-            className="text-white font-black text-3xl"
+            className="text-white hover:bg-black/30 flex justify-center items-center rounded-full active:scale-110 active:bg-black/60 w-10 h-10 font-black text-3xl"
             onClick={() => setOpenMenu(false)}
           >
             x
           </button>
         </div>
 
-        <div
-          className={[
-            "w-[90%] bg-white h-[2px] duration-1000",
-            openMenu ? "translate-x-0" : "translate-x-full",
-          ].join(" ")}
-        />
-
+        <div className="w-[90%] bg-white h-[2px]" />
       </div>
 
       <div className="space-y-12 h-full">
         <div className="w-full space-y-4 p-3">
           <Button1
             openMenu={openMenu}
-            duration={500}
             setOpenMenu={setOpenMenu}
             text="Home"
           />
 
           <Button1
             openMenu={openMenu}
-            duration={700}
             setOpenMenu={setOpenMenu}
             text="Poketeam"
           />
 
           <Button1
             openMenu={openMenu}
-            duration={1000}
             setOpenMenu={setOpenMenu}
             text="Pokeinfo"
           />
