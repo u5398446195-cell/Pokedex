@@ -1,4 +1,3 @@
-
 import type { PokemonDetails } from "../lib/pokeapi";
 import Image from "next/image";
 
@@ -21,7 +20,7 @@ export function DexScreen({
   error,
 }: DexScreenProps) {
   return (
-    <div className="dex-screen relative h-full min-h-0 w-full overflow-hidden border-[6px] border-[#ececec] bg-[#b8e8e9] sm:border-[8px]">
+    <div className="dex-screen relative flex h-full min-h-0 w-full flex-1 overflow-hidden border-[6px] border-[#ececec] bg-[#b8e8e9] sm:border-[8px]">
       {/* Reflets de l'écran */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(255,255,255,0.75),transparent_35%),linear-gradient(160deg,rgba(255,255,255,0.24),transparent_35%)]" />
 
@@ -55,7 +54,7 @@ export function DexScreen({
               height={420}
               priority
               sizes="(max-width: 639px) 90vw, (max-width: 1023px) 60vw, 50vw"
-              className="dex-pokemon-art relative z-10 h-full w-full object-contain"
+              className="dex-pokemon-art relative z-10 max-h-full max-w-full object-contain"
             />
           </>
         )}
@@ -78,7 +77,7 @@ export function DexScreen({
           content: "";
           position: absolute;
           inset: 0;
-          pointer-events: none;
+          pointer-events-none;
           box-shadow:
             inset 0 0 55px rgba(29, 72, 77, 0.17),
             inset 0 0 5px rgba(29, 72, 77, 0.15);
