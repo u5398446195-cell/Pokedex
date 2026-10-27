@@ -315,7 +315,7 @@ export default function RegionDex({
         {/* Header fixe */}
         <div
           className="
-            fixed inset-x-0 top-0 z-[60] mx-auto
+            fixed inset-x-0 top-0 z-[40] mx-auto
             h-[var(--dex-header-height)] max-w-[1500px]
           "
         >

@@ -6,7 +6,7 @@ export default function Menu({ openMenu, setOpenMenu }) {
   return (
     <div
       className={[
-        "bg-red-800 fixed absolute overflow-hidden p-2 z-49 h-screen right-1 w-70 md:w-100 duration-700",
+        "bg-red-800 fixed absolute overflow-hidden p-2 z-50  h-screen right-1 w-70 md:w-100 duration-700",
         openMenu ? "translate-x-[1%]" : "translate-x-[140%]",
       ].join(" ")}
       style={{ backgroundImage: "url('/IMG_2268.PNG')" }}

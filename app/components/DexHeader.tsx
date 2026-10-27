@@ -30,7 +30,7 @@ export function DexHeader({
   onSearch,
 }: DexHeaderProps) {
   return (
-    <header className="sm:fixed md:sticky inset-x-0 top-0 z-50 w-full border-b-[5px] border-[#870f20] bg-[#c81938] px-3 py-3 sm:px-5 sm:py-4">
+    <header className="sm:fixed md:sticky inset-x-0 top-0 z-30 w-full border-b-[5px] border-[#870f20] bg-[#c81938] px-3 py-3 sm:px-5 sm:py-4">
       <div className="mx-auto flex w-full max-w-[1500px] items-center justify-between gap-3">
         <div className="relative hidden h-12 w-12 shrink-0 place-items-center border-[4px] border-white/90 bg-[#2bbbf4] shadow-[0_0_20px_rgba(43,187,244,0.55),inset_0_0_0_4px_#1685bd] md:grid sm:h-16 sm:w-16">
           <div className="absolute left-[22%] top-[18%] h-3 w-3 bg-white/65 blur-[1px] sm:h-4 sm:w-4" />
