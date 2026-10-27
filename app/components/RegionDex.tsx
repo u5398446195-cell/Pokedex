@@ -353,18 +353,18 @@ export default function RegionDex({
           >
             {/* Zone principale du Pokédex */}
             <section
-              className="flex min-h-0 min-w-0 flex-1 flex-col"
+              className="min-h-0 min-w-0 flex-1"
               style={{ backgroundColor: accent }}
             >
               <div
                 className="
-                  grid min-h-0 flex-1 grid-cols-1
+                  grid min-h-0 grid-cols-1
                   md:h-full
                   md:grid-cols-[minmax(0,1.6fr)_minmax(260px,0.9fr)]
                 "
               >
                 {/* Colonne du Pokédex */}
-                <div className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col">
+                <div className="relative z-10 flex min-h-0 min-w-0 flex-col">
                   {/* Boutons mobiles */}
                   <div
                     className="
@@ -406,13 +406,14 @@ export default function RegionDex({
                   </div>
 
                   {/* Écran et contenu */}
-                  <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-                    {/* Écran - Ajusté avec flex-1 pour occuper l'espace sans espace vide */}
+                  <div className="flex min-h-0 min-w-0 flex-col md:flex-1">
+                    {/* Écran avec une taille équilibrée sur mobile (h-[220px] / sm:h-[260px]) pour laisser de la place à la description */}
                     <div
                       className="
-                        relative z-0 isolate min-h-[200px] flex-1
+                        relative z-0 isolate h-[220px] shrink-0
                         overflow-hidden px-1.5 pb-1.5 pt-1
-                        sm:px-2 sm:pb-2
+                        sm:h-[260px] sm:px-2 sm:pb-2
+                        md:h-auto md:min-h-0 md:flex-1
                       "
                     >
                       <DexScreen
@@ -422,7 +423,7 @@ export default function RegionDex({
                       />
                     </div>
 
-                    {/* Description */}
+                    {/* Description (visible et bien calée) */}
                     {activePokemon && (
                       <div className="relative z-10 shrink-0 p-2">
                         <p
