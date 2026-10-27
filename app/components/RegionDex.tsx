@@ -1,12 +1,20 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+
 import {
   fetchPokemonDetails,
   fetchRegionList,
   type PokemonDetails,
   type PokemonSummary,
 } from "../lib/pokeapi";
+
 import { DexHeader } from "./DexHeader";
 import { DexInfo } from "./DexInfo";
 import { DexList } from "./DexList";
@@ -29,6 +37,13 @@ type RegionDexProps = {
   frenchNames?: Record<number, string>;
 };
 
+type ModalInstance = {
+  uid: number;
+  id: number;
+  snapshot: PokemonDetails;
+  z: number;
+};
+
 export default function RegionDex({
   title,
   startId,
@@ -42,33 +57,31 @@ export default function RegionDex({
   const [pokemonList, setPokemonList] = useState<PokemonSummary[]>([]);
   const [activePokemon, setActivePokemon] =
     useState<PokemonDetails | null>(null);
+
   const [searchValue, setSearchValue] = useState("");
   const [searchDirty, setSearchDirty] = useState(false);
+
   const [loading, setLoading] = useState(true);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [error, setError] = useState("");
 
-  type ModalInstance = {
-    uid: number;
-    id: number;
-    data: PokemonDetails;
-    z: number;
-  };
-
   const [openModals, setOpenModals] = useState<ModalInstance[]>([]);
-  const nextUid = useRef(1);
-  const nextZ = useRef(100);
-
   const [showSimModal, setShowSimModal] = useState(false);
   const [showMobileList, setShowMobileList] = useState(false);
   const [openMenu, setOpenMenu] = useState(false);
 
   const searchRef = useRef<HTMLInputElement | null>(null);
   const cacheRef = useRef<Record<number, PokemonDetails>>({});
+  const nextUid = useRef(1);
+  const nextZ = useRef(100);
 
   const loadPokemon = useCallback(
     async (id: number) => {
-      if (id < startId || id > startId + count - 1) return;
+      const lastId = startId + count - 1;
+
+      if (id < startId || id > lastId) {
+        return;
+      }
 
       const cached = cacheRef.current[id];
 
@@ -76,7 +89,6 @@ export default function RegionDex({
         setActivePokemon(cached);
         setSearchValue(cached.englishName);
         setSearchDirty(false);
-        setError("");
         return;
       }
 
@@ -85,6 +97,7 @@ export default function RegionDex({
         setError("");
 
         const details = await fetchPokemonDetails(id, frenchNames);
+
         cacheRef.current[id] = details;
         setActivePokemon(details);
         setSearchValue(details.englishName);
@@ -110,7 +123,9 @@ export default function RegionDex({
           frenchNames,
         });
 
-        if (cancelled) return;
+        if (cancelled) {
+          return;
+        }
 
         setPokemonList(list);
         await loadPokemon(startId);
@@ -121,7 +136,9 @@ export default function RegionDex({
           setError(`Unable to load the ${title} index.`);
         }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
 
@@ -133,24 +150,38 @@ export default function RegionDex({
   }, [count, frenchNames, loadPokemon, startId, title]);
 
   const suggestions = useMemo(() => {
-    if (!searchDirty || !searchValue.trim()) return [];
+    if (!searchDirty || !searchValue.trim()) {
+      return [];
+    }
 
     return getSearchSuggestions(searchValue, pokemonList);
-  }, [searchDirty, searchValue, pokemonList]);
+  }, [pokemonList, searchDirty, searchValue]);
+
+  const showSuggestions =
+    searchDirty &&
+    searchValue.trim().length > 0 &&
+    suggestions.length > 0 &&
+    !loadingDetails;
 
   function findBestMatch(rawValue: string): PokemonSummary | null {
     const value = rawValue.trim().replace(/^#/, "");
-    if (!value) return null;
+
+    if (!value) {
+      return null;
+    }
 
     const normalized = normalize(value);
     const numericId = Number(value);
+    const lastId = startId + count - 1;
 
     if (
       Number.isInteger(numericId) &&
       numericId >= startId &&
-      numericId <= startId + count - 1
+      numericId <= lastId
     ) {
-      return pokemonList.find((pokemon) => pokemon.id === numericId) ?? null;
+      return (
+        pokemonList.find((pokemon) => pokemon.id === numericId) ?? null
+      );
     }
 
     const exactMatch = pokemonList.find(
@@ -159,7 +190,9 @@ export default function RegionDex({
         normalize(pokemon.frenchName) === normalized,
     );
 
-    if (exactMatch) return exactMatch;
+    if (exactMatch) {
+      return exactMatch;
+    }
 
     const startsWithMatch = [...pokemonList]
       .filter(
@@ -169,7 +202,9 @@ export default function RegionDex({
       )
       .sort((a, b) => a.id - b.id)[0];
 
-    if (startsWithMatch) return startsWithMatch;
+    if (startsWithMatch) {
+      return startsWithMatch;
+    }
 
     const includesMatch = [...pokemonList]
       .filter(
@@ -186,13 +221,13 @@ export default function RegionDex({
   function runSearch() {
     const match = findBestMatch(searchValue);
 
-    if (match) {
-      setError("");
-      void loadPokemon(match.id);
+    if (!match) {
+      setError("No Pokémon found.");
       return;
     }
 
-    setError("No Pokémon found.");
+    setError("");
+    void loadPokemon(match.id);
   }
 
   function selectSuggestion(pokemon: PokemonSummary) {
@@ -202,50 +237,88 @@ export default function RegionDex({
     void loadPokemon(pokemon.id);
   }
 
-  const showSuggestions =
-    searchDirty &&
-    searchValue.trim().length > 0 &&
-    suggestions.length > 0 &&
-    !loadingDetails;
-
   function openModalForActive() {
-    if (!activePokemon) return;
+    if (!activePokemon) {
+      return;
+    }
 
     const uid = nextUid.current++;
     const z = nextZ.current++;
-    const snapshot = JSON.parse(JSON.stringify(activePokemon));
+
+    const snapshot = JSON.parse(
+      JSON.stringify(activePokemon),
+    ) as PokemonDetails;
 
     setOpenModals((current) => [
       ...current,
-      { uid, id: activePokemon.id, data: snapshot, z },
+      {
+        uid,
+        id: activePokemon.id,
+        snapshot,
+        z,
+      },
     ]);
   }
 
   function closeModal(uid: number) {
-    setOpenModals((current) => current.filter((modal) => modal.uid !== uid));
+    setOpenModals((current) =>
+      current.filter((modal) => modal.uid !== uid),
+    );
   }
 
   function bringModalToFront(uid: number) {
     const z = nextZ.current++;
 
     setOpenModals((current) =>
-      current.map((modal) => (modal.uid === uid ? { ...modal, z } : modal)),
+      current.map((modal) =>
+        modal.uid === uid ? { ...modal, z } : modal,
+      ),
     );
   }
 
   return (
-    <main className="relative min-h-[100dvh] overflow-x-hidden overflow-y-auto bg-[#2c0914] md:h-[100dvh] md:overflow-hidden">
+    <main
+      className="
+        relative flex h-[100dvh] min-h-0 flex-col
+        overflow-hidden bg-[#2c0914]
+      "
+      style={
+        {
+          "--dex-header-height": "80px",
+        } as React.CSSProperties
+      }
+    >
+      {/* Fond du menu mobile */}
       <div
         className={[
-          "absolute inset-1 z-[47] duration-500",
-          openMenu ? "bg-black/40 backdrop-blur-xs" : "hidden",
+          "fixed inset-0 z-[47] transition duration-500",
+          openMenu
+            ? "pointer-events-auto bg-black/40 backdrop-blur-sm"
+            : "pointer-events-none invisible opacity-0",
         ].join(" ")}
       />
 
-      <Menu openMenu={openMenu} setOpenMenu={setOpenMenu} />
+      <Menu
+        openMenu={openMenu}
+        setOpenMenu={setOpenMenu}
+      />
 
-      <div className="relative mx-auto flex min-h-[100dvh] max-w-[1500px] flex-col border-[4px] border-[#7d0f1e] bg-[#c71938] shadow-[0_20px_60px_rgba(0,0,0,0.38),inset_0_1px_0_rgba(255,255,255,0.18)] md:h-full md:min-h-0">
-        <div className={showSuggestions ? "relative z-50 shrink-0" : "relative z-40 shrink-0"}>
+      {/* Conteneur général */}
+      <div
+        className="
+          relative mx-auto flex min-h-0 w-full max-w-[1500px]
+          flex-1 flex-col overflow-hidden border-x-[4px]
+          border-[#7d0f1e] bg-[#c71938]
+          shadow-[0_20px_60px_rgba(0,0,0,0.38),inset_0_1px_0_rgba(255,255,255,0.18)]
+        "
+      >
+        {/* Header fixe */}
+        <div
+          className="
+            fixed inset-x-0 top-0 z-[60] mx-auto
+            h-[var(--dex-header-height)] max-w-[1500px]
+          "
+        >
           <DexHeader
             setOpenMenu={setOpenMenu}
             activePokemon={activePokemon}
@@ -264,142 +337,235 @@ export default function RegionDex({
           />
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col md:flex-row">
-          <section
-            className="min-h-0 min-w-0 flex-1"
-            style={{ backgroundColor: accent }}
-          >
-            <div className="grid min-h-0 grid-cols-1 md:h-full md:grid-cols-[minmax(0,1.6fr)_minmax(260px,0.9fr)]">
-     {/* Colonne de gauche */}
-<div className="flex min-w-0 flex-col md:h-full md:min-h-0">
-  {/* Boutons mobiles */}
-  <div className="flex shrink-0 flex-row gap-2 px-2 pt-2 lg:hidden">
-    <button
-      onClick={openModalForActive}
-      disabled={!activePokemon}
-      className="flex-1 border-2 border-white/20 bg-[#b0173e] px-2 py-2 font-mono text-xs font-black uppercase text-white hover:bg-[#ff698f] disabled:cursor-not-allowed disabled:opacity-40"
-    >
-      Battle info
-    </button>
-
-    <button
-      onClick={() => setShowSimModal(true)}
-      disabled={!activePokemon}
-      className="flex-1 border-2 border-white/20 bg-[#b0173e] px-2 py-2 font-mono text-xs font-black uppercase text-white hover:bg-[#ff698f] disabled:cursor-not-allowed disabled:opacity-40"
-    >
-      Simulate
-    </button>
-  </div>
-
-  {/* Écran et contenu : hauteur fixe sur mobile */}
-  <div className="flex min-w-0 flex-col md:min-h-0 md:flex-1">
-    <div className="relative h-[260px] shrink-0 px-1.5 pb-1.5 pt-1 sm:h-[300px] sm:px-2 sm:pb-2 md:h-auto md:min-h-0 md:flex-1">
-      <DexScreen
-        activePokemon={activePokemon}
-        loading={loading || loadingDetails}
-        error={error}
-      />
-    </div>
-
-    {/* Description directement sous l'écran */}
-    {activePokemon && (
-      <div className="shrink-0 px-2 pb-2">
-        <div className="relative">
-          <p
-            className="max-h-22 overflow-y-auto whitespace-pre-wrap break-words rounded-md p-2 text-center text-base font-bold leading-relaxed text-white [scrollbar-width:thin]"
-            style={{ backgroundColor: desFcolor }}
-          >
-            {activePokemon.description}
-          </p>
-
+        {/* Zone située sous le header fixe */}
+        <div
+          className="
+            flex min-h-0 flex-1 flex-col
+            pt-[var(--dex-header-height)]
+          "
+        >
+          {/* Zone principale scrollable */}
           <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-6 rounded-b-md bg-gradient-to-t from-black/40 to-transparent"
-          />
-        </div>
-      </div>
-    )}
+            className="
+              flex min-h-0 flex-1 flex-col
+              overflow-y-auto md:flex-row md:overflow-hidden
+            "
+          >
+            {/* Zone principale du Pokédex */}
+            <section
+              className="min-h-0 min-w-0 flex-1"
+              style={{ backgroundColor: accent }}
+            >
+              <div
+                className="
+                  grid min-h-0 grid-cols-1
+                  md:h-full
+                  md:grid-cols-[minmax(0,1.6fr)_minmax(260px,0.9fr)]
+                "
+              >
+                {/* Colonne du Pokédex */}
+                <div className="relative z-10 flex min-h-0 min-w-0 flex-col">
+                  {/* Boutons mobiles */}
+                  <div
+                    className="
+                      sticky top-0 z-30 flex shrink-0 flex-row
+                      gap-2 border-b-2 border-[#8b1020]
+                      bg-[#c71938] px-2 pb-2 pt-3
+                      lg:hidden
+                    "
+                  >
+                    <button
+                      type="button"
+                      onClick={openModalForActive}
+                      disabled={!activePokemon}
+                      className="
+                        min-h-11 min-w-0 flex-1 border-2
+                        border-white/20 bg-[#b0173e] px-2 py-2
+                        font-mono text-xs font-black uppercase text-white
+                        hover:border-transparent hover:bg-[#ff698f]
+                        disabled:cursor-not-allowed disabled:opacity-50
+                      "
+                    >
+                      Battle info
+                    </button>
 
-    {/* Évolutions sur ordinateur */}
-    <div className="hidden shrink-0 px-2 pb-2 md:block">
-      {activePokemon && (
-        <EvolutionChain
-          startId={startId}
-          endId={endId}
-          onSelect={(pokemon) => void loadPokemon(pokemon.id)}
-          speciesUrl={`https://pokeapi.co/api/v2/pokemon-species/${activePokemon.id}/`}
-          currentId={activePokemon.id}
-        />
-      )}
-    </div>
-  </div>
-</div>
-              {/* Colonne de droite */}
-              <div className="flex min-h-0 min-w-0 flex-col gap-0 border-t-[4px] border-[#8b1020] bg-[#d92f4d] p-1.5 sm:p-2 md:border-l-[4px] md:border-t-0 md:p-2">
-                <div className="shrink-0">
-                  <DexInfo activePokemon={activePokemon} />
-                </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowSimModal(true)}
+                      disabled={!activePokemon}
+                      className="
+                        min-h-11 min-w-0 flex-1 border-2
+                        border-white/20 bg-[#b0173e] px-2 py-2
+                        font-mono text-xs font-black uppercase text-white
+                        hover:border-transparent hover:bg-[#ff698f]
+                        disabled:cursor-not-allowed disabled:opacity-50
+                      "
+                    >
+                      Simulate
+                    </button>
+                  </div>
 
-                <div className="mt-1 min-h-0 shrink-0">
-                  <div className="max-h-[38vh] overflow-y-auto pr-1 md:max-h-[32vh] lg:max-h-[34vh]">
-                    <DexStats
-                      activePokemon={activePokemon}
-                      statBarColor={statBarColor}
-                    />
+                  {/* Écran et contenu */}
+                  <div className="flex min-h-0 min-w-0 flex-col md:flex-1">
+                    {/* Écran */}
+                    <div
+                      className="
+                        relative z-0 isolate h-[260px] shrink-0
+                        overflow-hidden px-1.5 pb-1.5 pt-1
+                        sm:h-[300px] sm:px-2 sm:pb-2
+                        md:h-auto md:min-h-0 md:flex-1
+                      "
+                    >
+                      <DexScreen
+                        activePokemon={activePokemon}
+                        loading={loading || loadingDetails}
+                        error={error}
+                      />
+                    </div>
+
+                    {/* Description */}
+                    {activePokemon && (
+                      <div className="relative z-10 shrink-0 p-2">
+                        <p
+                          style={{ backgroundColor: desFcolor }}
+                          className="
+                            max-h-24 overflow-y-auto whitespace-pre-wrap
+                            break-words rounded-md p-2 text-center
+                            font-bold text-white lg:text-xl
+                          "
+                        >
+                          {activePokemon.description}
+                        </p>
+                      </div> 
+                    )}
+
+                    {/* Chaîne d'évolution */}
+                    <div className="relative z-10 hidden shrink-0 md:block">
+                      {activePokemon && (
+                        <div className="p-2">
+                          <EvolutionChain
+                            startId={startId}
+                            endId={endId}
+                            currentId={activePokemon.id}
+                            speciesUrl={`https://pokeapi.co/api/v2/pokemon-species/${activePokemon.id}/`}
+                            onSelect={(pokemon) =>
+                              void loadPokemon(pokemon.id)
+                            }
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                <div className="mt-2 hidden shrink-0 flex-row items-stretch gap-2 lg:flex">
-                  <button
-                    onClick={openModalForActive}
-                    disabled={!activePokemon}
-                    className="flex-1 border-2 border-white/20 bg-[#b0173e] px-2.5 py-2 font-mono text-[10px] font-black uppercase text-white hover:border-transparent hover:bg-[#ff698f] disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    Battle info
-                  </button>
+                {/* Colonne des statistiques */}
+                <div
+                  className="
+                    relative z-10 flex min-h-0 min-w-0 flex-col
+                    gap-0 border-t-[4px] border-[#8b1020]
+                    bg-[#d92f4d] p-1.5
+                    sm:p-2
+                    md:border-l-[4px] md:border-t-0 md:p-2
+                  "
+                >
+                  {/* Informations générales */}
+                  <div className="shrink-0">
+                    <DexInfo activePokemon={activePokemon} />
+                  </div>
 
-                  <button
-                    onClick={() => setShowSimModal(true)}
-                    disabled={!activePokemon}
-                    className="flex-1 border-2 border-white/20 bg-[#b0173e] px-2.5 py-2 font-mono text-[10px] font-black uppercase text-white hover:border-transparent hover:bg-[#ff698f] disabled:cursor-not-allowed disabled:opacity-40"
+                  {/* Statistiques */}
+                  <div className="mt-1 min-h-0 shrink-0">
+                    <div
+                      className="
+                        max-h-[38vh] overflow-y-auto pr-1
+                        md:max-h-[32vh]
+                        lg:max-h-[34vh]
+                      "
+                    >
+                      <DexStats
+                        activePokemon={activePokemon}
+                        statBarColor={statBarColor}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Boutons desktop */}
+                  <div
+                    className="
+                      mt-2 hidden shrink-0
+                      flex-row items-stretch gap-2
+                      lg:flex
+                    "
                   >
-                    Simulate
-                  </button>
+                    <button
+                      type="button"
+                      onClick={openModalForActive}
+                      disabled={!activePokemon}
+                      className="
+                        flex-1 border-2 border-white/20
+                        bg-[#b0173e] px-2.5 py-2
+                        font-mono text-[10px] font-black
+                        uppercase text-white
+                        hover:border-transparent hover:bg-[#ff698f]
+                        disabled:cursor-not-allowed disabled:opacity-50
+                      "
+                    >
+                      Battle info
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowSimModal(true)}
+                      disabled={!activePokemon}
+                      className="
+                        flex-1 border-2 border-white/20
+                        bg-[#b0173e] px-2.5 py-2
+                        font-mono text-[10px] font-black
+                        uppercase text-white
+                        hover:border-transparent hover:bg-[#ff698f]
+                        disabled:cursor-not-allowed disabled:opacity-50
+                      "
+                    >
+                      Simulate
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </section>
+            </section>
 
-          <DexList
-            pokemonList={pokemonList}
-            activePokemon={activePokemon}
-            onSelect={(pokemon) => void loadPokemon(pokemon.id)}
-            showMobileList={showMobileList}
-            setShowMobileList={setShowMobileList}
-          />
+            {/* Liste des Pokémon */}
+            <DexList
+              pokemonList={pokemonList}
+              activePokemon={activePokemon}
+              onSelect={(pokemon) => void loadPokemon(pokemon.id)}
+              showMobileList={showMobileList}
+              setShowMobileList={setShowMobileList}
+            />
+          </div>
         </div>
+
+     {/* Modales de détails */}
+        {openModals.map((modal) => (
+          <DexDetailsModal
+            key={`modal-${modal.uid}`}
+            startId={startId}
+            endId={endId}
+            loadPokemon={loadPokemon}
+            activePokemon={modal.snapshot}
+            onClose={() => closeModal(modal.uid)}
+            zIndex={modal.z}
+            onFocus={() => bringModalToFront(modal.uid)}
+          />
+        ))}
+
+        {/* Modal de simulation */}
+        {showSimModal && (
+          <SimulateBattle
+            own={activePokemon}
+            pokemonList={pokemonList}
+            onClose={() => setShowSimModal(false)}
+          />
+        )}
       </div>
-
-      {openModals.map((modal) => (
-        <DexDetailsModal
-          startId={startId}
-          endId={endId}
-          loadPokemon={loadPokemon}
-          key={`modal-${modal.uid}`}
-          activePokemon={modal.data}
-          onClose={() => closeModal(modal.uid)}
-          zIndex={modal.z}
-          onFocus={() => bringModalToFront(modal.uid)}
-        />
-      ))}
-
-      {showSimModal && (
-        <SimulateBattle
-          own={activePokemon}
-          pokemonList={pokemonList}
-          onClose={() => setShowSimModal(false)}
-        />
-      )}
     </main>
   );
 }
