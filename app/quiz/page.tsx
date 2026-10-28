@@ -162,7 +162,7 @@ export default function Quiz() {
                     </button>
                 </div>
 
-                <div className="relative flex-1 flex items-center justify-center"> 
+                <div className="relativ hidden md:flex flex-1 flex items-center justify-center"> 
                     <h1 className="text-xs md:text-base relative z-2 font-extrabold tracking-wider uppercase text-blue-400 text-center truncate px-2">
                         {t.title}
                     </h1>
