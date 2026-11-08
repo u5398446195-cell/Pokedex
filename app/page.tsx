@@ -27,11 +27,11 @@ const REGIONS = [
   { name: "HOENN", href: "/pokedex/Hoenn", image: "/HoennPIC.webp", gen: "GÉN. III", range: "252-386", starter: 258 },
 ];
 
-// Ce qu'on peut faire sur le site (href null = en cours de développement)
+// Ce qu'on peut faire sur le site
 const FEATURES = [
   { name: "POKÉDEX", href: "/pokedex", sprite: 137, text: "Fiches, stats, talents, attaques, évolutions et simulateur de combat.", cta: "OUVRIR" },
   { name: "QUIZ", href: "/quiz", sprite: 132, text: "Une silhouette, un nom à trouver. Enchaîne les bonnes réponses.", cta: "JOUER" },
-  { name: "POKETEAM", href: null, sprite: 143, text: "Composer son équipe de 6 et voir ses faiblesses.", cta: "BIENTÔT" },
+  { name: "COMBAT", href: "/pokedex", sprite: 448, text: "Depuis une fiche, lance un combat simulé contre un autre Pokémon.", cta: "SE BATTRE" },
 ];
 
 const START_MENU = [
