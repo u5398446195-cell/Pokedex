@@ -41,6 +41,11 @@ export type PokemonAbilityDetails = {
   effect: string;
   shortEffect: string;
   generation: string;
+  /** nom et description du jeu en français (si PokéAPI les a) */
+  frenchName: string;
+  frenchText: string;
+  /** nombre de Pokémon qui peuvent avoir ce talent */
+  pokemonCount: number;
 };
 
 export type PokemonMoveDetails = {
@@ -223,11 +228,19 @@ export async function fetchAbilityDetails(
     (entry: any) => entry.language.name === "en",
   );
 
+  const frName = data.names?.find((n: any) => n.language.name === "fr");
+  // le texte français le plus récent des jeux
+  const frTexts = (data.flavor_text_entries ?? []).filter((t: any) => t.language.name === "fr");
+  const frText = frTexts[frTexts.length - 1];
+
   return {
     name: data.name,
     effect: en?.effect ?? "No description available.",
     shortEffect: en?.short_effect ?? "",
     generation: data.generation?.name ?? "",
+    frenchName: frName?.name ?? "",
+    frenchText: frText?.flavor_text?.replace(/[\f\n\r]+/g, " ") ?? "",
+    pokemonCount: data.pokemon?.length ?? 0,
   };
 }
 

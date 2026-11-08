@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { fetchPokemonDetails } from "../lib/pokeapi";
 import RetroHeader from "../components/RetroHeader.jsx";
+import RetroFooter from "../components/RetroFooter.jsx";
 
 const GENERATIONS = [
     { labelFr: "Toutes les générations", labelEn: "All Generations", min: 1, max: 1025 },
@@ -262,11 +263,7 @@ export default function Quiz() {
                 </div>
             </div>
 
-            <footer className="gb-footer">
-                <span>POKÉQUIZ</span>
-                <span className="gb-footer-blink">▶ CONTINUER ?</span>
-                <span>DONNÉES : POKÉAPI</span>
-            </footer>
+            <RetroFooter />
         </main>
     );
 }

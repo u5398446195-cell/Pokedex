@@ -11,6 +11,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import RetroHeader from "./components/RetroHeader.jsx";
+import RetroFooter from "./components/RetroFooter.jsx";
 
 const SPRITES = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon";
 // Sprites animés de Noir & Blanc : de vrais petits pixels qui bougent
@@ -220,11 +221,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <footer className="gb-footer">
-        <span>POKÉDEX — FAIT PAR TEWFIK</span>
-        <span className="gb-footer-blink">▶ CONTINUER ?</span>
-        <span>DONNÉES : POKÉAPI</span>
-      </footer>
+      <RetroFooter />
     </main>
   );
 }

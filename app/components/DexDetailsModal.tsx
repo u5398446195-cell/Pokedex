@@ -629,11 +629,11 @@ function AbilityModal({
 }) {
   const [pos, setPos] = useState(() => {
     if (typeof window === "undefined") return { x: 0, y: 0 };
-    const w = 500;
-    const h = 340;
+    // grande fenêtre (presque toute la hauteur) pour lire la description en entier
+    const w = Math.min(760, window.innerWidth - 48);
     return {
-      x: Math.max(24, Math.round((window.innerWidth - w) / 2 + 40)),
-      y: Math.max(24, Math.round((window.innerHeight - h) / 2 + 40)),
+      x: Math.max(24, Math.round((window.innerWidth - w) / 2)),
+      y: 24,
     };
   });
   const [mounted, setMounted] = useState(false);
@@ -663,80 +663,84 @@ function AbilityModal({
     };
   }, [abilityName]);
 
+  const generation = details?.generation?.replace("generation-", "").toUpperCase();
+
   return (
     <div
       ref={modalRef}
-      className="gb-window pointer-events-auto fixed flex max-h-[calc(100dvh-24px)] w-[min(500px,calc(100vw-32px))] flex-col overflow-hidden rounded-lg border-4 border-[#1a1a1a] bg-gradient-to-b from-[#fffbe0] to-[#f0e68c] shadow-2xl transition-all duration-300 ease-out"
+      role="dialog"
+      aria-label={`Talent ${formatName(abilityName)}`}
+      className="gb-window gbm gbm-talent"
       style={{
         left: `${pos.x}px`,
         top: `${pos.y}px`,
         zIndex,
-        boxShadow: "10px 10px 0 rgba(0,0,0,0.65)",
-        transform: mounted ? "scale(1)" : "scale(0.9)",
+        ["--type" as string]: typeColor,
         opacity: mounted ? 1 : 0,
       }}
+      onPointerDown={() => onFocus?.()}
     >
-      <div className="h-1.5 shrink-0" style={{ backgroundColor: typeColor }} />
-
       <div
         onPointerDown={(e) => {
           const el = e.target as Element | null;
-          if (el && el.closest("button")) {
-            onFocus?.();
-            return;
-          }
+          if (el?.closest("button")) return;
+          if (!window.matchMedia("(min-width: 641px)").matches) return;
           draggingRef.current = true;
           const rect = modalRef.current?.getBoundingClientRect();
-          dragOffsetRef.current = {
-            x: e.clientX - (rect?.left ?? 0),
-            y: e.clientY - (rect?.top ?? 0),
-          };
-          try {
-            (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-          } catch {}
-          onFocus?.();
+          dragOffsetRef.current = { x: e.clientX - (rect?.left ?? 0), y: e.clientY - (rect?.top ?? 0) };
         }}
-        className={`flex relative cursor-grab touch-none items-center justify-between border-b-4 border-[#1a1a1a] bg-gradient-to-br ${typeGradient} px-4 py-3 select-none`}
+        className={`gbm-head bg-gradient-to-br ${typeGradient}`}
       >
-        <div className="min-w-0">
-          <p className="text-[10px] font-black uppercase tracking-widest text-white/70">
-            Ability
-          </p>
-          <h3 className="truncate text-lg font-black uppercase tracking-wide text-white drop-shadow-md">
-            {formatName(abilityName)}
-          </h3>
+        <div className="gbm-head-id">
+          <span className="gbm-no">TALENT</span>
+          <h2 className="gbm-name">{details?.frenchName || formatName(abilityName)}</h2>
+          {details?.frenchName && <span className="gbm-genus">{formatName(abilityName)}</span>}
         </div>
-        <button
-          onClick={onClose}
-          className="ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-white/60 bg-white/20 text-lg font-black text-white backdrop-blur-sm transition-all hover:scale-110 hover:bg-white/40"
-        >
+        <button type="button" onClick={onClose} className="gbm-close" aria-label="Fermer">
           ✕
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto bg-[#fffacd] px-3 py-1">
+      {/* Tout le texte est visible : la fenêtre prend la hauteur de l'écran et défile si besoin */}
+      <div className="gbm-body gbm-talent-body">
         {loading ? (
-          <div className="flex flex-col items-center gap-3 py-6 text-[#666]">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#c8b860] border-t-transparent" />
-            <p className="text-xs font-black uppercase tracking-widest">Loading…</p>
-          </div>
+          <p className="gbm-loading-big">CHARGEMENT...</p>
         ) : (
           <>
-            <p className="text-lg max-h-32 overflow-auto px-3 leading-relaxed text-[#333] ">
-              {details?.effect ?? "No description available."}
-            </p>
-            <div className="absolute left-0 border-b-2 border-black -mt-5 bg-gradient-to-b from-black/0 to-black/30 via-black/10  w-full  h-5  flex items-end"></div>
-
-            {details?.generation && (
-              <div className="mt-4 rounded border-2 border-[#1a1a1a] bg-white/60 p-2 shadow-[2px_2px_0_rgba(0,0,0,0.15)]">
-                <p className="text-[10px] font-black uppercase tracking-wider text-[#666]">
-                  Introduced
-                </p>
-                <p className="mt-1 text-[15px] font-bold uppercase text-[#444]">
-                  {details.generation.replace("generation-", "Generation ")}
-                </p>
+            {details?.frenchText && (
+              <div className="gbm-dialog">
+                <p>{details.frenchText}</p>
+                <span className="gbm-dialog-next" aria-hidden="true">▼</span>
               </div>
             )}
+
+            {/* cette carte s'étire pour occuper toute la hauteur restante de l'écran */}
+            <div className="gbm-card gbm-talent-main">
+              <p className="gbm-label">EFFET EN COMBAT</p>
+              <p className="gbm-talent-text">{details?.effect ?? "Pas de description."}</p>
+            </div>
+
+            {details?.shortEffect && details.shortEffect !== details.effect && (
+              <div className="gbm-card">
+                <p className="gbm-label">EN BREF</p>
+                <p className="gbm-text">{details.shortEffect}</p>
+              </div>
+            )}
+
+            <div className="gbm-duo">
+              {generation && (
+                <div className="gbm-card">
+                  <p className="gbm-label">APPARU EN</p>
+                  <p className="gbm-big">GÉN. {generation}</p>
+                </div>
+              )}
+              {details?.pokemonCount ? (
+                <div className="gbm-card">
+                  <p className="gbm-label">POKÉMON</p>
+                  <p className="gbm-big">{details.pokemonCount}</p>
+                </div>
+              ) : null}
+            </div>
           </>
         )}
       </div>

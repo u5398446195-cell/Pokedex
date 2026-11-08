@@ -4,6 +4,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import RetroHeader from "../components/RetroHeader.jsx";
+import RetroFooter from "../components/RetroFooter.jsx";
 
 const SPRITES = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon";
 const animated = (id: number) => `${SPRITES}/versions/generation-v/black-white/animated/${id}.gif`;
@@ -54,6 +55,7 @@ export default function PokedexHome() {
           ))}
         </div>
       </section>
+      <RetroFooter />
     </main>
   );
 }

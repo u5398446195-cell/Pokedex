@@ -286,6 +286,7 @@ a.jelly { text-decoration: none; }
   font-family: var(--retro);
   font-size: 22px;
   line-height: 1.15;
+  font-variant-ligatures: none;
   overflow-x: clip;
 }
 .gb img { image-rendering: pixelated; }
@@ -672,19 +673,16 @@ a.jelly { text-decoration: none; }
   box-shadow: 0 0 0 3px var(--ink);
 }
 
-.gb-footer {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 20px 16px;
-  background: var(--ink);
-  color: #fff;
-  font-family: var(--px);
-  font-size: 9px;
-  line-height: 1.7;
-}
-.gb-footer-blink { color: var(--yellow); animation: gb-blink 1s steps(2) infinite; }
+
+/* ─── Mentions légales ─── */
+.gb-legal { max-width: 860px; padding-bottom: 56px; }
+.gb-legal-date { margin: -12px 0 22px; opacity: 0.75; }
+.gb-legal-box { padding: 18px 20px; margin-bottom: 22px; }
+.gb-legal-box h2 { margin: 0 0 12px; font-family: var(--px); font-size: clamp(11px, 2.4vw, 14px); line-height: 1.5; color: var(--red-dark); }
+.gb-legal-box p { margin: 0 0 10px; }
+.gb-legal-box p:last-child { margin-bottom: 0; }
+.gb-legal-box a { color: var(--blue); text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
+.gb-legal-back { display: inline-block; margin-top: 8px; }
 
 /* ─── Tablette / téléphone ─── */
 @media (max-width: 900px) {
@@ -1030,14 +1028,18 @@ a.jelly { text-decoration: none; }
 .gbm-show { padding: 0; overflow: hidden; }
 .gbm-stage {
   position: relative;
-  display: grid;
-  place-items: center;
+  /* flex (et pas grid) pour que la hauteur en % de l'image soit fiable */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
   height: 240px;
   background:
     radial-gradient(ellipse 34% 8% at 50% 86%, rgba(0, 0, 0, 0.18) 0 99%, transparent 100%),
     linear-gradient(to bottom, color-mix(in srgb, var(--type) 30%, #fff) 0 70%, color-mix(in srgb, var(--type) 45%, #fff) 70%);
 }
 .gbm-art { width: auto; height: 86%; max-width: 90%; object-fit: contain; }
+.gbm-show .gbm-toggles { position: relative; z-index: 1; background: #fff; }
 .gbm-art.is-pixel { height: 80%; image-rendering: pixelated; }
 .gbm-loading { position: absolute; top: 10px; left: 12px; font-family: var(--px); font-size: 12px; animation: gb-blink 0.6s steps(2) infinite; }
 .gbm-sparkle { position: absolute; top: 12px; right: 16px; color: #f8c000; font-size: 28px; animation: gb-blink 0.5s steps(2) infinite; }
@@ -1125,4 +1127,112 @@ a.jelly { text-decoration: none; }
   .gbm-body { padding: 12px 10px calc(16px + env(safe-area-inset-bottom)); }
   .gbm-stage { height: 200px; }
   .gbm-tab { font-size: 10px; padding: 14px 4px; }
+}
+
+/* ─── Fenêtre « Talent » : prend toute la hauteur pour lire la description en entier ─── */
+.gbm-talent {
+  width: min(860px, calc(100vw - 48px));
+  /* toute la hauteur de l'écran (moins une petite marge), quelle que soit sa taille */
+  top: 24px !important;
+  height: calc(100dvh - 48px);
+  max-height: none;
+}
+/* colonne qui remplit toute la fenêtre : la carte « Effet » prend la place restante */
+.gbm-talent-body { display: flex; flex-direction: column; gap: 14px; }
+.gbm-talent-body > * { flex-shrink: 0; }
+.gbm-talent-main { flex: 1 0 auto; display: flex; flex-direction: column; }
+/* texte qui grandit avec la hauteur de l'écran */
+.gbm-talent-text { margin: 0; font-size: clamp(24px, 3.6vh, 40px); line-height: 1.25; white-space: pre-line; }
+.gbm-talent .gbm-dialog { font-size: clamp(26px, 3.8vh, 42px); }
+.gbm-dialog {
+  position: relative;
+  padding: 18px 22px 26px;
+  background: #fff;
+  font-size: 28px;
+  line-height: 1.2;
+  box-shadow: 0 0 0 4px var(--ink), inset 0 0 0 4px #fff, inset 0 0 0 7px var(--win-line);
+  margin: 4px;
+}
+.gbm-dialog p { margin: 0; }
+.gbm-dialog-next { position: absolute; right: 16px; bottom: 8px; color: var(--red); animation: gb-bounce 0.8s steps(2) infinite; }
+.gbm-loading-big { font-family: var(--px); font-size: 12px; text-align: center; padding: 40px 0; animation: gb-blink 0.6s steps(2) infinite; }
+@keyframes gb-bounce { 50% { translate: 0 4px; } }
+@media (max-width: 640px) {
+  .gbm-talent { top: 0 !important; width: 100vw; height: 100dvh; }
+}
+
+/* ─── Pied de page rétro (components/RetroFooter.jsx) ─── */
+.gbf {
+  position: relative;
+  font-variant-ligatures: none; /* sinon « fi » devient une ligature illisible en VT323 */
+  margin-top: auto;
+  background: var(--ink);
+  color: #fff;
+  font-family: var(--retro);
+  font-size: 22px;
+  line-height: 1.2;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.gbf-grass {
+  height: 28px;
+  border-bottom: 4px solid #000;
+  background:
+    linear-gradient(135deg, var(--grass) 25%, transparent 25%) -8px 0 / 16px 16px,
+    linear-gradient(225deg, var(--grass) 25%, transparent 25%) -8px 0 / 16px 16px,
+    repeating-linear-gradient(to bottom, var(--grass-dark) 0 8px, #3c8c3c 8px 16px);
+  background-color: var(--cream);
+}
+.gbf-grid {
+  display: grid;
+  grid-template-columns: 1.4fr repeat(3, 1fr);
+  gap: 28px;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 36px 16px 28px;
+}
+.gbf-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--yellow);
+  font-family: var(--px);
+  font-size: 16px;
+  text-decoration: none;
+  text-shadow: 3px 3px 0 var(--red);
+}
+.gbf-logo img { image-rendering: pixelated; }
+.gbf-id p { margin: 14px 0 0; max-width: 28ch; color: #c8c8d0; }
+.gbf-col { display: grid; align-content: start; gap: 6px; }
+.gbf-title { margin: 0 0 8px; font-family: var(--px); font-size: 11px; color: var(--yellow); letter-spacing: 0.05em; }
+.gbf-text { margin: 0; color: #c8c8d0; }
+.gbf-link { position: relative; justify-self: start; color: #fff; text-decoration: none; }
+.gbf-cursor { position: absolute; left: -16px; visibility: hidden; color: var(--yellow); }
+.gbf-link:hover, .gbf-link:focus-visible { color: var(--yellow); }
+.gbf-link:hover .gbf-cursor, .gbf-link:focus-visible .gbf-cursor { visibility: visible; }
+.gbf-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background: var(--red);
+  border-top: 4px solid #000;
+  font-family: var(--px);
+  font-size: 9px;
+  line-height: 1.7;
+}
+.gbf-blink { color: #fff; animation: gb-blink 1s steps(2) infinite; }
+.gbf-top { color: #fff; text-decoration: none; padding: 6px 10px; background: var(--ink); box-shadow: 0 0 0 3px #fff; }
+.gbf-top:hover, .gbf-top:focus-visible { color: var(--yellow); }
+.gbf-legal { margin: 0; padding: 10px 16px 14px; background: #1c1c22; color: #9898a4; font-size: 17px; text-align: center; }
+@media (max-width: 800px) {
+  .gbf-grid { grid-template-columns: 1fr 1fr; }
+  .gbf-id { grid-column: 1 / -1; }
+}
+@media (max-width: 420px) {
+  .gbf-blink { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gbf-blink { animation: none; }
 }
