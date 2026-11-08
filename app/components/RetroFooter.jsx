@@ -8,8 +8,9 @@ const COLUMNS = [
     links: [
       { label: "Pokédex", href: "/pokedex" },
       { label: "Kanto", href: "/pokedex/kanto" },
-      { label: "Johto", href: "/pokedex/johto" },
-      { label: "Hoenn", href: "/pokedex/Hoenn" },
+      { label: "Sinnoh", href: "/pokedex/sinnoh" },
+      { label: "Kalos", href: "/pokedex/kalos" },
+      { label: "Paldea", href: "/pokedex/paldea" },
     ],
   },
   {
@@ -35,7 +36,7 @@ export default function RetroFooter() {
             <img src="/icon.png" alt="" width={40} height={40} />
             <span>POKÉDEX</span>
           </Link>
-          <p>Kanto, Johto et Hoenn : fiches, formes, talents, évolutions et quiz.</p>
+          <p>Les 1025 Pokémon de Kanto à Paldea : fiches, formes, talents, évolutions et quiz.</p>
         </div>
 
         {COLUMNS.map((col) => (

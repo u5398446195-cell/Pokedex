@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 // wip: true = fonctionnalité en cours de développement (affichée mais pas cliquable)
 const LINKS = [
   { text: "ACCUEIL", href: "/", info: "Revenir à l'écran titre." },
-  { text: "POKÉDEX", href: "/pokedex", info: "Fiches de Kanto, Johto et Hoenn." },
+  { text: "POKÉDEX", href: "/pokedex", info: "Les 1025 Pokémon, de Kanto à Paldea." },
   { text: "QUIZ", href: "/quiz", info: "Quel est ce Pokémon ? Devine son nom." },
   { text: "POKETEAM", href: "/poketeam", wip: true, info: "Composer son équipe. En cours de dev !" },
   { text: "STUDIO PHOTO", href: "/photo", wip: true, info: "Éditeur d'images. En cours de dev !" },

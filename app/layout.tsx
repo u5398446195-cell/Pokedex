@@ -28,7 +28,7 @@ const terminal = VT323({
 
 export const metadata: Metadata = {
   title: "Pokédex",
-  description: "Pokédex de Kanto, Johto et Hoenn, quiz « Quel est ce Pokémon ? » et simulateur de combat.",
+  description: "Pokédex des 1025 Pokémon, de Kanto à Paldea, quiz « Quel est ce Pokémon ? » et simulateur de combat.",
 };
 
 export default function RootLayout({

@@ -74,7 +74,7 @@ export default function HomePage() {
 
   // Pokémon mystère tiré au hasard côté navigateur (pas côté serveur : sinon erreur d'hydratation)
   useEffect(() => {
-    setMysteryId(1 + Math.floor(Math.random() * 386));
+    setMysteryId(1 + Math.floor(Math.random() * 1025));
   }, []);
 
   return (
@@ -129,7 +129,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── Régions ─── */}
-      <section className="gb-section">
+      <section className="gb-section  space-y-4">
         <h2 className="gb-h2">
           <span className="gb-h2-ball" aria-hidden="true" />
           CHOISIS TA RÉGION
@@ -154,6 +154,8 @@ export default function HomePage() {
             </Link>
           ))}
         </div>
+
+        <div className="w-full flex justify-center "><Link className="gb-dex button bg-green-700 p-3 hover:border-green-200 hover:bg-green-400 active:border-green-500 active:bg-green-700  text-white border-3 border-black hover:cursor-pointer" href="/pokedex">Voir toutes les régions</Link></div>
       </section>
 
       {/* ─── Quel est ce Pokémon ? ─── */}

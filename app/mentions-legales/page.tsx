@@ -25,7 +25,7 @@ export default function MentionsLegales() {
           <span className="gb-h2-ball" aria-hidden="true" />
           MENTIONS LÉGALES
         </h1>
-        <p className="gb-legal-date">Dernière mise à jour : novembre 2026</p>
+        <p className="gb-legal-date">Dernière mise à jour : 8 novembre 2026</p>
 
         <div className="gb-legal-box px-frame">
           <h2>▶ ÉDITEUR DU SITE</h2>
@@ -62,6 +62,13 @@ export default function MentionsLegales() {
             Site de fan non officiel, ni affilié ni approuvé par Nintendo, Creatures Inc., GAME FREAK inc. ou The Pokémon Company.
             Pokémon, les noms des Pokémon, leurs images et sprites sont des marques et œuvres de leurs propriétaires respectifs
             (© Nintendo / Creatures Inc. / GAME FREAK inc.). Aucune publicité, rien n&apos;est vendu.
+          </p>
+          <p>
+            Les cartes des régions (Kanto, Johto, Hoenn, Sinnoh, Unys, Kalos, Alola, Galar, Hisui et Paldea) sont des
+            illustrations officielles tirées des jeux Pokémon, © Nintendo / Creatures Inc. / GAME FREAK inc. Elles sont
+            affichées ici uniquement pour illustrer chaque région, dans un cadre non commercial, et seront retirées sur
+            simple demande des ayants droit. Source des nouvelles cartes :{" "}
+            <a href="https://archives.bulbagarden.net" {...ext}>Bulbagarden Archives</a>.
           </p>
         </div>
 
