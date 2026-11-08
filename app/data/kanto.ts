@@ -14,7 +14,7 @@ export const KANTO_FRENCH_NAMES: Record<number, string> = {
   55: "Akwakwak", 56: "Férosinge", 57: "Colossinge", 58: "Caninos", 59: "Arcanin", 60: "Ptitard",
   61: "Têtarte", 62: "Tartard", 63: "Abra", 64: "Kadabra", 65: "Alakazam", 66: "Machoc",
   67: "Machopeur", 68: "Mackogneur", 69: "Chétiflor", 70: "Boustiflor", 71: "Empiflor", 72: "Tentacool",
-  73: "Tentacruel", 74: "Géodude", 75: "Gravalanche", 76: "Grolem", 77: "Ponyta", 78: "Galopa",
+  73: "Tentacruel", 74: "Racaillou", 75: "Gravalanche", 76: "Grolem", 77: "Ponyta", 78: "Galopa",
   79: "Ramoloss", 80: "Flagadoss", 81: "Magnéti", 82: "Magnéton", 83: "Canarticho", 84: "Doduo",
   85: "Dodrio", 86: "Otaria", 87: "Lamantine", 88: "Tadmorv", 89: "Grotadmorv", 90: "Kokiyas",
   91: "Crustabri", 92: "Fantominus", 93: "Spectrum", 94: "Ectoplasma", 95: "Onix", 96: "Soporifik",
@@ -45,6 +45,9 @@ export const TYPE_LABELS: Record<string, string> = {
   rock: "Rock",
   ghost: "Ghost",
   dragon: "Dragon",
+  dark: "Dark",
+  steel: "Steel",
+  fairy: "Fairy",
 };
 
 export const TYPE_STYLES: Record<string, string> = {
@@ -63,6 +66,9 @@ export const TYPE_STYLES: Record<string, string> = {
   rock: "bg-stone-600 text-white",
   ghost: "bg-violet-700 text-white",
   dragon: "bg-indigo-700 text-white",
+  dark: "bg-stone-800 text-white",
+  steel: "bg-slate-400 text-slate-950",
+  fairy: "bg-pink-300 text-pink-950",
 };
 
 export const STAT_LABELS: Record<string, string> = {

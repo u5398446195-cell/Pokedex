@@ -1,5 +1,5 @@
 import HoennDex from "./HoennDex"
 
-export default function JohtoPage() {
+export default function HoennPage() {
   return <HoennDex/>;
 }

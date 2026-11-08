@@ -1,36 +1,32 @@
-
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
-export default function Button1({ text, duration, openMenu, setOpenMenu }) {
-  const [bouncing, setBouncing] = useState(false);
-  const router = useRouter();
+// Bouton du menu (effet « gel » qui se remplit au survol).
+// - href : la page à ouvrir
+// - wip  : fonctionnalité en cours de développement → bouton grisé, non cliquable, avec un badge
+export default function Button1({ text, href = "/", wip = false, setOpenMenu }) {
+  const content = (
+    <span className="surface">
+      <span className="gel-core" />
+      <span className="gel-highlight" />
+      <span className="gel-reflection" />
+      <span className={`label ${wip ? "label-wip" : ""}`}>{text}</span>
+      {wip && <span className="wip-badge">En cours de dev</span>}
+    </span>
+  );
 
-  function Redirecte() {
-    setOpenMenu(true);
-    router.push("/");
+  if (wip) {
+    return (
+      <span className="jelly is-wip w-full" aria-disabled="true" title="Fonctionnalité en cours de développement">
+        {content}
+      </span>
+    );
   }
 
   return (
-    <button
-      className={`jelly w-full duration-${duration} ${
-        openMenu ? "translate-x-0" :"translate-x-full" 
-      } ${bouncing ? "" : "is-bouncing"}`}
-      onClick={Redirecte}
-      onAnimationEnd={(event) => {
-        if (event.animationName === "jelly-impact") {
-          setBouncing(false);
-        }
-      }}
-    >
-      <span className="surface">
-        <span className="gel-core" />
-        <span className="gel-highlight" />
-        <span className="gel-reflection" />
-        <span className="label">{text}</span>
-      </span>
-    </button>
+    <Link href={href} className="jelly w-full" onClick={() => setOpenMenu?.(false)}>
+      {content}
+    </Link>
   );
 }

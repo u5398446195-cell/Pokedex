@@ -1,145 +1,230 @@
-'use client';
+"use client";
+
+// Accueil 100 % rétro, façon jeux Pokémon Game Boy / GBA :
+//  - écran titre (logo pixel, « APPUIE SUR START » qui clignote, défilé de sprites animés)
+//  - boîte de dialogue qui s'écrit lettre par lettre + menu à flèche ▶
+//  - régions façon « Carte de la ville », silhouette « Quel est ce Pokémon ? »
+//  - outils présentés comme des barres de PV de combat
+//  - lignes de balayage d'écran cathodique par-dessus toute la page
 
 import Image from "next/image";
-import ParticleAnimation from "./components/Fontanime1.jsx";
-import Menu from "./components/Menu.jsx";
-import { useState } from 'react';
-import Card from "./components/card.jsx";
-import Link from 'next/link';
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import RetroHeader from "./components/RetroHeader.jsx";
+
+const SPRITES = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon";
+// Sprites animés de Noir & Blanc : de vrais petits pixels qui bougent
+const animated = (id: number) => `${SPRITES}/versions/generation-v/black-white/animated/${id}.gif`;
+const artwork = (id: number) => `${SPRITES}/other/official-artwork/${id}.png`;
+
+// Le cortège qui défile en bas de l'écran titre (starters, mascottes…)
+const PARADE = [25, 1, 4, 7, 133, 152, 155, 158, 175, 252, 255, 258, 143, 94, 129, 300, 39, 54];
+
+const REGIONS = [
+  { name: "KANTO", href: "/pokedex/kanto", image: "/KantoPIC.avif", gen: "GÉN. I", range: "001-151", starter: 25 },
+  { name: "JOHTO", href: "/pokedex/johto", image: "/JohtoPIC.webp", gen: "GÉN. II", range: "152-251", starter: 175 },
+  { name: "HOENN", href: "/pokedex/Hoenn", image: "/HoennPIC.webp", gen: "GÉN. III", range: "252-386", starter: 258 },
+];
+
+// Ce qu'on peut faire sur le site (href null = en cours de développement)
+const FEATURES = [
+  { name: "POKÉDEX", href: "/pokedex", sprite: 137, text: "Fiches, stats, talents, attaques, évolutions et simulateur de combat.", cta: "OUVRIR" },
+  { name: "QUIZ", href: "/quiz", sprite: 132, text: "Une silhouette, un nom à trouver. Enchaîne les bonnes réponses.", cta: "JOUER" },
+  { name: "POKETEAM", href: null, sprite: 143, text: "Composer son équipe de 6 et voir ses faiblesses.", cta: "BIENTÔT" },
+];
+
+const START_MENU = [
+  { label: "POKÉDEX", href: "/pokedex" },
+  { label: "QUIZ", href: "/quiz" },
+  { label: "KANTO", href: "/pokedex/kanto" },
+  { label: "JOHTO", href: "/pokedex/johto" },
+];
+
+const DIALOG = "Bienvenue dans le monde des POKÉMON ! Que veux-tu faire ?";
+
+// Texte qui s'écrit lettre par lettre, comme dans les jeux
+function useTypewriter(text: string, speed = 35) {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setCount(text.length);
+      return;
+    }
+    setCount(0);
+    const timer = setInterval(() => {
+      setCount((c) => {
+        if (c >= text.length) {
+          clearInterval(timer);
+          return c;
+        }
+        return c + 1;
+      });
+    }, speed);
+    return () => clearInterval(timer);
+  }, [text, speed]);
+
+  return { shown: text.slice(0, count), done: count >= text.length };
+}
 
 export default function HomePage() {
+  const [mysteryId, setMysteryId] = useState<number | null>(null);
+  const { shown, done } = useTypewriter(DIALOG);
 
-    const [openMenu, setOpenMenu] = useState(false);
+  // Pokémon mystère tiré au hasard côté navigateur (pas côté serveur : sinon erreur d'hydratation)
+  useEffect(() => {
+    setMysteryId(1 + Math.floor(Math.random() * 386));
+  }, []);
 
   return (
-    <main className="min-h-screen relative bg-gradient-to-b from-slate-900 via-slate-900 to-blue-950 text-white overflow-x-hidden overflow-y-auto font-sans selection:bg-blue-600 selection:text-white">
-  
-  <Menu openMenu={openMenu} setOpenMenu={setOpenMenu}/> 
+    <main className="gb">
+      <RetroHeader />
 
-  {/* DECORATION 1: BLACK CUBE AT BOTTOM RIGHT */}
-     <Image src="/pokeball-pokemon-svgrepo-com.svg" width={40} height={40} alt="menu" className="z-1 opacity-20 flex justify-center items-center absolute right-[-20px] bottom-24 w-56 h-56 rotate-12 backdrop-blur-3xl pointer-events-none z-0 hidden sm:block" />
-
-  {/* DECORATION 2: POKEMON CLAW MARKS IN BACKGROUND */}
-  <div className="absolute z-1 left-4 top-1/2 -translate-y-1/2 opacity-20 pointer-events-none z-3 flex gap-3 rotate-[-25deg]">
-    <div className="w-2 sm:w-3 h-64 sm:h-96 bg-gradient-to-b from-cyan-400 via-blue-500 to-transparent rounded-full blur-[1px]"></div>
-    <div className="w-2 sm:w-3 h-72 sm:h-[420px] bg-gradient-to-b from-cyan-400 via-blue-500 to-transparent rounded-full blur-[1px]"></div>
-    <div className="w-2 sm:w-3 h-60 sm:h-80 bg-gradient-to-b from-cyan-400 via-blue-500 to-transparent rounded-full blur-[1px]"></div>
-  </div>
-
-  <div className="w-full absolute opacity-30 bottom-1 overflow-hidden leading-none">
-    <svg 
-      className="relative block w-full h-[60px] sm:h-[100px] text-blue-900 fill-current" 
-      viewBox="0 0 1200 120" 
-      preserveAspectRatio="none"
-    >
-      <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z"></path>
-    </svg>
-  </div>
-
-  {/* NAVBAR IN Z-30 WITH CORRECTED BACKDROP BLUR */}
-  <nav className="bg-slate-900/70 backdrop-blur-lg z-30 fixed top-0 left-0 flex justify-between items-center px-4 sm:px-8 w-full h-14 border-b border-white/10 shadow-md">
-    <div className="flex items-center space-x-8">
-    </div>
-
-    {/* Search + Menu Button */}
-    <div className="flex items-center space-x-3">
-      <button
-        type="button"
-        className="bg-black/20 hover:bg-black border border-white/10 w-10 h-10 flex items-center justify-center rounded-full hover:scale-105 active:scale-95 transition-all shadow-lg"
-        onClick={() => setOpenMenu(true)}
-      >
-        <Image src="/hamburger-svgrepo-com.svg" width={20} height={20} alt="menu" />
-      </button>
-    </div>
-  </nav>
-
-  {/* HERO BANNER: FULL-WIDTH BACKGROUND IMAGE */}
-  <div className="relative w-full h-[400px] sm:h-[460px] pt-14 overflow-hidden flex items-center justify-start">
-    
-    <Image
-      src="/header-xxl-poketournament.jpg"
-      alt="Lugia Banner"
-      draggable={false}
-      fill
-      priority
-      className="absolute inset-0 w-full h-full object-cover object-right z-0 opacity-60 scale-105 transition-transform duration-1000 hover:scale-100"
-    />
-
-    <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/20 to-transparent z-0"></div>
-    <div className="absolute inset-0 bg-gradient-to-b from-slate-900/40 via-transparent to-slate-900 z-0"></div>
-
-    <div className="relative z-10 max-w-2xl px-6 sm:px-12 space-y-3">
-      
-      <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-white drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)] leading-tight">
-        Explore. Discover. <br />
-        <span className="text-blue-400">Live the adventure.</span>
-      </h2>
-      
-      <p className="text-slate-300 text-xs sm:text-sm max-w-md drop-shadow-md font-medium leading-relaxed">
-        Catch, train, and analyze all your creatures. The entire Pokémon universe at your fingertips.
-      </p>
-
-      {/* Hero Buttons */}
-      <div className="flex flex-wrap gap-3 pt-2">
-        <button className="bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs px-5 py-3 rounded-xl flex items-center gap-2 shadow-lg shadow-blue-600/30 transition-all active:scale-95">
-          <Link href="/pokedex"><span>Explore Pokédex</span>
-         </Link>
-        </button>
-        
-        <button 
-          onClick={() => alert("Feature under development 🚀")}
-          className="bg-slate-900/80 hover:bg-slate-800 border border-white/20 text-white font-medium text-xs px-5 py-3 rounded-xl transition-all active:scale-95 backdrop-blur-md"
-        >
-          Check my team
-        </button>
-      </div>
-    </div>
-  </div>
-
-  {/* MAIN CONTENT */}
-  <div className="max-w-7xl mx-auto px-4 sm:px-8 space-y-10 py-6 relative z-10 pb-20">
-
-    {/* QUICK ACCESS */}
-    <div className="space-y-4">
-      <div className="flex justify-between items-center px-1">
-        <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_12px_#22d3ee]"></span>
-          QUICK ACCESS
-        </h3>
-       </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        
-        <Card link="/pokedex" text="An online pokedex faithful to" header="Pokedex" src="/206263.png" alt='pokedex'></Card>
-       
-        {/* CARD 2: CREATE TEAM */}
-        <div 
-          onClick={() => alert("Feature under development 🚀")}
-          className="group relative h-40 rounded-2xl overflow-hidden border border-white/10 bg-slate-900/80 p-4 flex flex-col justify-between shadow-xl hover:border-blue-500/50 hover:bg-slate-900 transition-all cursor-pointer backdrop-blur-md"
-        >
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/60 to-transparent z-10"></div>
-          <Image src="/poketeam-card.webp" width={100} height={100} alt="pokedex" className="inset-0 w-full h-full absolute object-cover group-hover:scale-110 group-hover:opacity-40 transition-all duration-500" />
-          <div className="relative z-20 space-y-1 mt-auto">
-            <h4 className="text-sm font-black text-white tracking-wide group-hover:text-blue-400 transition-colors">Create Team</h4>
-            <p className="text-[10px] text-slate-300">Test the synergy and level of your battle team.</p>
-          </div>
+      {/* ─── Écran titre ─── */}
+      <section className="gb-title">
+        <div className="gb-title-sky" aria-hidden="true">
+          <span className="gb-cloud gb-cloud-1" />
+          <span className="gb-cloud gb-cloud-2" />
+          <span className="gb-cloud gb-cloud-3" />
         </div>
 
-        {/* CARD 4: QUIZ */}
-        <Card link="/quiz" text="A fun quiz to enjoy yourself" header="Pokedex" src="/Pokemonquiz.jpeg" alt='Pokemon quiz'></Card>
-        
-      </div>
-    </div>
-       
-    {/* FOOTER */}
-    <footer className="pt-6 border-t border-white/10 flex flex-col sm:flex-row justify-between items-center text-[11px] text-slate-400 gap-4">
-      <div className="flex items-center space-x-2">
-        <span className="font-bold text-slate-200">Pokédex</span>
-        <span className="text-slate-400 ml-2">The complete guide for trainers</span>
-      </div>
-    </footer>
+        <div className="gb-title-inner">
+          <h1 className="gb-logo">
+            <span className="gb-logo-main">POKÉDEX</span>
+            <span className="gb-logo-sub">ÉDITION TEWFIK</span>
+          </h1>
 
-  </div>
-</main>
+          <div className="gb-dialog px-frame">
+            <p aria-hidden="true">
+              {shown}
+              {!done && <span className="gb-caret">▌</span>}
+            </p>
+            {done && <span className="gb-dialog-next" aria-hidden="true">▼</span>}
+            <span className="sr-only">{DIALOG}</span>
+          </div>
+
+          <nav className="gb-start px-frame" aria-label="Accès rapide">
+            {START_MENU.map((item) => (
+              <Link key={item.href} href={item.href} className="gb-start-item">
+                <span className="gb-cursor" aria-hidden="true">▶</span>
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+
+          <p className="gb-press">APPUIE SUR START</p>
+        </div>
+
+        {/* Herbes hautes + cortège de Pokémon qui marchent */}
+        <div className="gb-ground" aria-hidden="true">
+          <div className="gb-parade">
+            {[...PARADE, ...PARADE].map((id, i) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img key={i} src={animated(id)} alt="" loading="lazy" />
+            ))}
+          </div>
+          <div className="gb-grass" />
+        </div>
+      </section>
+
+      {/* ─── Régions ─── */}
+      <section className="gb-section">
+        <h2 className="gb-h2">
+          <span className="gb-h2-ball" aria-hidden="true" />
+          CHOISIS TA RÉGION
+        </h2>
+
+        <div className="gb-regions">
+          {REGIONS.map((region) => (
+            <Link key={region.name} href={region.href} className="gb-region px-frame">
+              <div className="gb-region-bar">
+                <span>CARTE DE {region.name}</span>
+                <span>{region.gen}</span>
+              </div>
+              <div className="gb-region-img">
+                <Image src={region.image} alt={`Carte de ${region.name}`} fill sizes="(max-width: 768px) 100vw, 33vw" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="gb-region-sprite" src={animated(region.starter)} alt="" loading="lazy" />
+              </div>
+              <div className="gb-region-foot">
+                <span className="gb-cursor" aria-hidden="true">▶</span>
+                N° {region.range}
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* ─── Quel est ce Pokémon ? ─── */}
+      <section className="gb-who">
+        <div className="gb-who-inner">
+          <div className="gb-who-stage">
+            {/* les rayons tournent autour de la silhouette (leur centre = le centre du Pokémon) */}
+            <div className="gb-who-rays" aria-hidden="true" />
+            <div className="gb-who-art">
+              {mysteryId && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={artwork(mysteryId)} alt="Pokémon mystère" draggable={false} />
+              )}
+            </div>
+          </div>
+
+          <div className="gb-who-text">
+            <h2>
+              QUEL EST
+              <br />
+              CE POKÉMON ?
+            </h2>
+            <div className="gb-who-box px-frame">
+              <p>Seulement sa silhouette. Trouve son nom et bats ton record de série.</p>
+            </div>
+            <Link href="/quiz" className="gb-btn px-frame">
+              ▶ JOUER AU QUIZ
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Fonctionnalités ─── */}
+      <section className="gb-section">
+        <h2 className="gb-h2">
+          <span className="gb-h2-ball" aria-hidden="true" />
+          FONCTIONNALITÉS
+        </h2>
+
+        <div className="gb-features">
+          {FEATURES.map((f) => {
+            const inner = (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="gb-feature-sprite" src={animated(f.sprite)} alt="" loading="lazy" />
+                <h3 className="gb-feature-name">{f.name}</h3>
+                <p className="gb-feature-text">{f.text}</p>
+                <span className="gb-feature-cta">
+                  {f.href && <span aria-hidden="true">▶ </span>}
+                  {f.cta}
+                </span>
+              </>
+            );
+            return f.href ? (
+              <Link key={f.name} href={f.href} className="gb-feature px-frame">
+                {inner}
+              </Link>
+            ) : (
+              <div key={f.name} className="gb-feature px-frame is-wip" aria-disabled="true">
+                {inner}
+                <span className="gb-feature-badge">EN COURS DE DEV</span>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      <footer className="gb-footer">
+        <span>POKÉDEX — FAIT PAR TEWFIK</span>
+        <span className="gb-footer-blink">▶ CONTINUER ?</span>
+        <span>DONNÉES : POKÉAPI</span>
+      </footer>
+    </main>
   );
 }

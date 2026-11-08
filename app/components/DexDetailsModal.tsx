@@ -6,7 +6,14 @@ import type {
   PokemonAbilityDetails,
   PokemonMoveDetails,
 } from "../lib/pokeapi";
-import { fetchAbilityDetails, fetchMoveDetails } from "../lib/pokeapi";
+import type { PokemonFormDetails, PokemonSpeciesExtras } from "../lib/pokeapi";
+import {
+  fetchAbilityDetails,
+  fetchCosmeticSprite,
+  fetchFormDetails,
+  fetchMoveDetails,
+  fetchSpeciesExtras,
+} from "../lib/pokeapi";
 import Image from "next/image";
 import EvolutionChain2 from "./EvolutionChain2";
 
@@ -89,6 +96,16 @@ function getStatColor(value: number): string {
   return "#D00000";
 }
 
+// Nom lisible d'une forme : "charizard-mega-x" → "MÉGA X", forme par défaut → "NORMALE"
+function formLabel(name: string, baseName: string) {
+  if (name === baseName) return "NORMALE";
+  const rest = name.startsWith(`${baseName}-`) ? name.slice(baseName.length + 1) : name;
+  return rest
+    .split("-")
+    .map((w) => (w === "mega" ? "MÉGA" : w === "alola" ? "ALOLA" : w === "galar" ? "GALAR" : w === "hisui" ? "HISUI" : w === "paldea" ? "PALDEA" : w.toUpperCase()))
+    .join(" ");
+}
+
 export function DexDetailsModal({
   loadPokemon,
   activePokemon,
@@ -107,18 +124,17 @@ export function DexDetailsModal({
   onFocus?: () => void;
 }) {
   const [tab, setTab] = useState<"info" | "abilities" | "moves">("info");
-  
-  // Instant lazy-init for position to prevent jumping from (0,0)
+
+  // Position de la fenêtre (ordinateur). Sur téléphone, le CSS l'affiche en plein écran.
   const [pos, setPos] = useState(() => {
     if (typeof window === "undefined") return { x: 0, y: 0 };
-    const w = Math.min(950, window.innerWidth - 48);
-    const h = Math.min(720, window.innerHeight - 48);
+    const w = Math.min(980, window.innerWidth - 48);
+    const h = Math.min(760, window.innerHeight - 48);
     return {
       x: Math.max(24, Math.round((window.innerWidth - w) / 2)),
       y: Math.max(24, Math.round((window.innerHeight - h) / 2)),
     };
   });
-
   const [mounted, setMounted] = useState(false);
   const draggingRef = useRef(false);
   const dragOffsetRef = useRef({ x: 0, y: 0 });
@@ -127,10 +143,74 @@ export function DexDetailsModal({
   const [selectedAbility, setSelectedAbility] = useState<string | null>(null);
   const [selectedMove, setSelectedMove] = useState<PokemonMove | null>(null);
 
+  // ── Formes, sexe, chromatique ──
+  const [extras, setExtras] = useState<PokemonSpeciesExtras | null>(null);
+  const [variety, setVariety] = useState<string | null>(null);
+  const [form, setForm] = useState<PokemonFormDetails | null>(null);
+  const [formLoading, setFormLoading] = useState(false);
+  const [cosmetic, setCosmetic] = useState<string | null>(null);
+  const [cosmeticSprites, setCosmeticSprites] = useState<{ sprite: string; spriteShiny: string } | null>(null);
+  const [gender, setGender] = useState<"male" | "female">("male");
+  const [shiny, setShiny] = useState(false);
+
+  const pokemonId = activePokemon?.id;
+
   useEffect(() => {
     requestAnimationFrame(() => setMounted(true));
-  }, [activePokemon?.id]);
+  }, [pokemonId]);
 
+  // Infos de l'espèce : taux de sexe, différences mâle/femelle, liste des formes
+  useEffect(() => {
+    if (!pokemonId) return;
+    let cancelled = false;
+    setExtras(null);
+    setVariety(null);
+    setForm(null);
+    setCosmetic(null);
+    setShiny(false);
+    fetchSpeciesExtras(pokemonId)
+      .then((x) => {
+        if (cancelled) return;
+        setExtras(x);
+        setVariety(x.varieties.find((v) => v.isDefault)?.name ?? x.varieties[0]?.name ?? null);
+        setGender(x.genderRate === 8 ? "female" : "male");
+      })
+      .catch(console.error);
+    return () => {
+      cancelled = true;
+    };
+  }, [pokemonId]);
+
+  // Détails de la forme choisie (types, stats, talents et images changent)
+  useEffect(() => {
+    if (!variety) return;
+    let cancelled = false;
+    setFormLoading(true);
+    fetchFormDetails(variety)
+      .then((f) => !cancelled && setForm(f))
+      .catch(console.error)
+      .finally(() => !cancelled && setFormLoading(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [variety]);
+
+  // Forme seulement visuelle (ex. Zarbi B) : on récupère juste son sprite
+  useEffect(() => {
+    if (!cosmetic) {
+      setCosmeticSprites(null);
+      return;
+    }
+    let cancelled = false;
+    fetchCosmeticSprite(cosmetic)
+      .then((sp) => !cancelled && setCosmeticSprites(sp))
+      .catch(console.error);
+    return () => {
+      cancelled = true;
+    };
+  }, [cosmetic]);
+
+  // Déplacement de la fenêtre à la souris (ordinateur seulement)
   useEffect(() => {
     function onPointerMove(e: PointerEvent) {
       if (!draggingRef.current) return;
@@ -139,349 +219,371 @@ export function DexDetailsModal({
         y: Math.max(0, Math.min(window.innerHeight - 100, e.clientY - dragOffsetRef.current.y)),
       });
     }
-    function onPointerUp(e: PointerEvent) {
-      if (draggingRef.current) {
-        draggingRef.current = false;
-        try {
-          (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
-        } catch {}
-      }
+    function onPointerUp() {
+      draggingRef.current = false;
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
     }
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("keydown", onKey);
     return () => {
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("keydown", onKey);
     };
-  }, []);
+  }, [onClose]);
 
   if (!activePokemon) return null;
 
-  const primaryType = Array.isArray(activePokemon.types)
-    ? (typeof activePokemon.types[0] === "string" ? activePokemon.types[0] : "normal")
-    : "normal";
-  const typeColor = TYPE_COLORS[primaryType.toLowerCase()] || "#A8A878";
-  const typeGradient = TYPE_GRADIENTS[primaryType.toLowerCase()] || TYPE_GRADIENTS.normal;
+  // Ce qu'on affiche : la forme choisie si elle est chargée, sinon la fiche de base
+  const types = form?.types ?? activePokemon.types;
+  const stats = form?.stats ?? activePokemon.stats;
+  const abilities = form?.abilities ?? activePokemon.abilities;
+  const height = form?.height ?? activePokemon.height;
+  const weight = form?.weight ?? activePokemon.weight;
+
+  const primaryType = (types[0] ?? "normal").toLowerCase();
+  const typeColor = TYPE_COLORS[primaryType] || "#A8A878";
+  const typeGradient = TYPE_GRADIENTS[primaryType] || TYPE_GRADIENTS.normal;
+
+  const baseName = extras?.varieties.find((v) => v.isDefault)?.name ?? activePokemon.englishName;
+  const isDefaultForm = !variety || variety === baseName;
+
+  // Sexe
+  const genderRate = extras?.genderRate ?? -1;
+  const genderless = genderRate === -1;
+  const femalePct = genderless ? 0 : (genderRate / 8) * 100;
+  const canBeMale = !genderless && genderRate < 8;
+  const canBeFemale = !genderless && genderRate > 0;
+  const showFemaleSprite = gender === "female" && Boolean(extras?.hasGenderDifferences) && Boolean(form?.spriteFemale);
+
+  // Image : forme visuelle > sprite femelle (seul cas où l'apparence change) > illustration officielle
+  let image = activePokemon.artwork;
+  let pixel = false;
+  if (cosmetic && cosmeticSprites?.sprite) {
+    image = shiny ? cosmeticSprites.spriteShiny || cosmeticSprites.sprite : cosmeticSprites.sprite;
+    pixel = true;
+  } else if (showFemaleSprite && form) {
+    image = shiny ? form.spriteShinyFemale || form.spriteFemale : form.spriteFemale;
+    pixel = true;
+  } else if (form) {
+    image = (shiny ? form.artworkShiny : form.artwork) || activePokemon.artwork;
+  }
+
+  const advantages = getAdvantages(primaryType);
+  const weaknesses = getWeaknesses(primaryType);
+  const total = stats.reduce((sum, st) => sum + st.value, 0);
+
+  const TAB_LABELS = { info: "INFOS", abilities: "TALENTS", moves: "ATTAQUES" } as const;
 
   return (
     <>
       <div
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300"
+        className="gbm-backdrop"
         style={{ zIndex: zIndex - 1, opacity: mounted ? 1 : 0 }}
         onClick={onClose}
       />
 
       <div
         ref={modalRef}
-        className="pointer-events-auto fixed flex max-h-[calc(100dvh-24px)] w-[min(950px,calc(100vw-32px))] max-w-[950px] flex-col overflow-hidden rounded-lg border-4 border-[#1a1a1a] bg-gradient-to-b from-[#f0f0f0] to-[#c8c8c8] shadow-2xl transition-all duration-300 ease-out"
+        role="dialog"
+        aria-label={`Fiche de ${formatName(activePokemon.englishName)}`}
+        className="gb-window gbm"
         style={{
           left: `${pos.x}px`,
           top: `${pos.y}px`,
           zIndex,
-          boxShadow: "12px 12px 0 rgba(0,0,0,0.75), 0 0 60px rgba(0,0,0,0.3)",
-          transform: mounted ? "scale(1) translateY(0)" : "scale(0.92) translateY(20px)",
+          ["--type" as string]: typeColor,
           opacity: mounted ? 1 : 0,
         }}
+        onPointerDown={() => onFocus?.()}
       >
-        <div className="h-1.5 shrink-0" style={{ backgroundColor: typeColor }} />
-
+        {/* Barre de titre (on peut la glisser sur ordinateur) */}
         <div
           onPointerDown={(e) => {
             const el = e.target as Element | null;
-            if (el && (el.closest("button") || el.closest("a") || el.closest("input"))) {
-              onFocus?.();
-              return;
-            }
+            if (el?.closest("button")) return;
+            if (!window.matchMedia("(min-width: 641px)").matches) return;
             draggingRef.current = true;
             const rect = modalRef.current?.getBoundingClientRect();
-            dragOffsetRef.current = {
-              x: e.clientX - (rect?.left ?? 0),
-              y: e.clientY - (rect?.top ?? 0),
-            };
-            try {
-              (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-            } catch {}
-            onFocus?.();
+            dragOffsetRef.current = { x: e.clientX - (rect?.left ?? 0), y: e.clientY - (rect?.top ?? 0) };
           }}
-          className={`shrink-0 cursor-grab touch-none border-b-4 border-[#1a1a1a] bg-gradient-to-br ${typeGradient} px-4 py-3 text-white select-none sm:px-6 sm:py-4`}
+          className={`gbm-head bg-gradient-to-br ${typeGradient}`}
         >
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-              <Image
-                src={activePokemon.artwork}
-                alt={activePokemon.englishName}
-                width={80}
-                height={80}
-                className="h-12 w-12 shrink-0 object-contain drop-shadow-2xl sm:h-16 sm:w-16"
-              />
-              <div className="min-w-0">
-                <h2 className="truncate text-lg font-black uppercase tracking-wide text-white drop-shadow-md sm:text-2xl">
-                  {activePokemon.englishName}
-                </h2>
-                <p className="truncate font-mono text-xs text-white/90 drop-shadow-md sm:text-sm">
-                  {String(activePokemon.id).padStart(3, "0")} · {activePokemon.genus}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onClose();
-              }}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-white/60 bg-white/20 text-lg font-black text-white backdrop-blur-sm transition-all hover:scale-110 hover:bg-white/40 sm:h-10 sm:w-10 sm:text-xl"
-            >
-              ✕
-            </button>
+          <div className="gbm-head-id">
+            <span className="gbm-no">N° {String(activePokemon.id).padStart(3, "0")}</span>
+            <h2 className="gbm-name">{activePokemon.frenchName || formatName(activePokemon.englishName)}</h2>
+            <span className="gbm-genus">
+              {formatName(activePokemon.englishName)}
+              {activePokemon.genus ? ` · ${activePokemon.genus}` : ""}
+            </span>
           </div>
+          <button type="button" onClick={onClose} className="gbm-close" aria-label="Fermer">
+            ✕
+          </button>
         </div>
 
-        <div className="flex shrink-0 border-b-4 border-[#1a1a1a] bg-[#c0c0c0]">
+        {/* Onglets */}
+        <div className="gbm-tabs" role="tablist">
           {(["info", "abilities", "moves"] as const).map((t) => (
             <button
               key={t}
+              type="button"
+              role="tab"
+              aria-selected={tab === t}
               onClick={() => setTab(t)}
-              className={`relative flex-1 border-r-2 border-[#888] px-2 py-2 text-xs font-black uppercase tracking-wide transition-all sm:px-4 sm:py-3 sm:text-sm ${
-                tab === t
-                  ? "border-b-2 border-[#1a1a1a] bg-[#f0f0f0] text-[#000]"
-                  : "bg-[#b0b0b0] text-[#333] hover:bg-[#c8c8c8]"
-              }`}
+              className={`gbm-tab ${tab === t ? "is-on" : ""}`}
             >
-              {t}
-              {tab === t && (
-                <div
-                  className="absolute bottom-0 left-0 h-1 w-full"
-                  style={{ backgroundColor: typeColor }}
-                />
-              )}
+              {tab === t && <span aria-hidden="true">▶ </span>}
+              {TAB_LABELS[t]}
             </button>
           ))}
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto bg-[#f0f0f0] p-3 sm:p-4">
+        <div className="gbm-body">
           {tab === "info" && (
-            <div className="space-y-3">
-              <div className="rounded border-2 border-[#1a1a1a] bg-white p-3 shadow-[3px_3px_0_rgba(0,0,0,0.15)]">
-                <div className="mb-2 text-[11px] font-black tracking-wider text-[#333]">TYPE</div>
-                <div className="flex flex-wrap gap-2">
-                  {Array.isArray(activePokemon.types) &&
-                    activePokemon.types.map((t) => {
-                      const typeName = typeof t === "string" ? t : "unknown";
-                      const bgColor = TYPE_COLORS[typeName.toLowerCase()] || "#A8A878";
-                      return (
-                        <span
-                          key={typeName}
-                          className="rounded-sm border-2 border-[#1a1a1a] px-3 py-1 text-xs font-black uppercase tracking-wide text-white shadow-[2px_2px_0_rgba(0,0,0,0.4)]"
-                          style={{ backgroundColor: bgColor }}
-                        >
-                          {typeName}
-                        </span>
-                      );
-                    })}
+            <div className="gbm-info">
+              {/* ── Colonne gauche : vitrine + formes + sexe ── */}
+              <div className="gbm-col">
+                <div className="gbm-card gbm-show">
+                  <div className="gbm-stage">
+                    {image && (
+                      <Image
+                        key={image}
+                        src={image}
+                        alt={formatName(activePokemon.englishName)}
+                        width={300}
+                        height={300}
+                        unoptimized={pixel}
+                        className={`gbm-art ${pixel ? "is-pixel" : ""}`}
+                      />
+                    )}
+                    {formLoading && <span className="gbm-loading">...</span>}
+                    {shiny && <span className="gbm-sparkle" aria-hidden="true">✦</span>}
+                  </div>
+
+                  <div className="gbm-toggles">
+                    <button
+                      type="button"
+                      className={`gbm-chip ${shiny ? "is-on" : ""}`}
+                      aria-pressed={shiny}
+                      onClick={() => setShiny((v) => !v)}
+                    >
+                      ✦ CHROMATIQUE
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              {Array.isArray(activePokemon.types) &&
-                (() => {
-                  const pt = typeof activePokemon.types[0] === "string"
-                    ? activePokemon.types[0].toLowerCase()
-                    : "normal";
-                  const advantages = getAdvantages(pt);
-                  const weaknesses = getWeaknesses(pt);
+                {/* Formes */}
+                {extras && (extras.varieties.length > 1 || extras.cosmeticForms.length > 0) && (
+                  <div className="gbm-card">
+                    <p className="gbm-label">FORMES</p>
+                    <div className="gbm-chips">
+                      {extras.varieties.map((v) => (
+                        <button
+                          key={v.name}
+                          type="button"
+                          className={`gbm-chip ${variety === v.name && !cosmetic ? "is-on" : ""}`}
+                          aria-pressed={variety === v.name && !cosmetic}
+                          onClick={() => {
+                            setCosmetic(null);
+                            setVariety(v.name);
+                          }}
+                        >
+                          {formLabel(v.name, baseName)}
+                        </button>
+                      ))}
+                      {extras.cosmeticForms.slice(1).map((f) => (
+                        <button
+                          key={f.name}
+                          type="button"
+                          className={`gbm-chip ${cosmetic === f.name ? "is-on" : ""}`}
+                          aria-pressed={cosmetic === f.name}
+                          onClick={() => setCosmetic(cosmetic === f.name ? null : f.name)}
+                        >
+                          {f.formName.toUpperCase()}
+                        </button>
+                      ))}
+                    </div>
+                    {!isDefaultForm && <p className="gbm-note">Types, stats et talents de cette forme.</p>}
+                  </div>
+                )}
 
-                  return (
+                {/* Sexe */}
+                {extras && (
+                  <div className="gbm-card">
+                    <p className="gbm-label">SEXE</p>
+                    {genderless ? (
+                      <p className="gbm-text">Asexué — ni mâle ni femelle.</p>
+                    ) : (
+                      <>
+                        <div className="gbm-chips">
+                          {canBeMale && (
+                            <button
+                              type="button"
+                              className={`gbm-chip gbm-male ${gender === "male" ? "is-on" : ""}`}
+                              aria-pressed={gender === "male"}
+                              onClick={() => setGender("male")}
+                            >
+                              ♂ MÂLE
+                            </button>
+                          )}
+                          {canBeFemale && (
+                            <button
+                              type="button"
+                              className={`gbm-chip gbm-female ${gender === "female" ? "is-on" : ""}`}
+                              aria-pressed={gender === "female"}
+                              onClick={() => setGender("female")}
+                            >
+                              ♀ FEMELLE
+                            </button>
+                          )}
+                        </div>
+                        <div className="gbm-ratio" aria-label={`${100 - femalePct} % mâles, ${femalePct} % femelles`}>
+                          <span className="gbm-ratio-m" style={{ width: `${100 - femalePct}%` }} />
+                          <span className="gbm-ratio-f" style={{ width: `${femalePct}%` }} />
+                        </div>
+                        <p className="gbm-text">
+                          ♂ {Math.round((100 - femalePct) * 10) / 10} % · ♀ {Math.round(femalePct * 10) / 10} %
+                          {extras.hasGenderDifferences ? " — le mâle et la femelle sont différents." : " — même apparence."}
+                        </p>
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {/* Types */}
+                <div className="gbm-card">
+                  <p className="gbm-label">TYPE</p>
+                  <div className="gbm-chips">
+                    {types.map((t) => (
+                      <span key={t} className="gbm-type" style={{ backgroundColor: TYPE_COLORS[t] || "#A8A878" }}>
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                  {advantages.length > 0 && (
                     <>
-                      {advantages.length > 0 && (
-                        <div className="rounded border-2 border-[#1a1a1a] bg-gradient-to-br from-[#f0fff0] to-[#d8ffd8] p-3 shadow-[3px_3px_0_rgba(0,0,0,0.15)]">
-                          <div className="mb-2 flex items-center gap-2 text-[11px] font-black tracking-wider text-[#0A5A0A]">
-                            <span>▲</span>
-                            <span>STRONG AGAINST</span>
-                          </div>
-                          <div className="flex flex-wrap gap-2">
-                            {advantages.map((type) => (
-                              <span
-                                key={type}
-                                className="rounded-sm border-2 border-[#1a1a1a] px-2 py-1 text-[10px] font-black uppercase text-white shadow-[2px_2px_0_rgba(0,0,0,0.4)]"
-                                style={{ backgroundColor: TYPE_COLORS[type] || "#A8A878" }}
-                              >
-                                {type}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {weaknesses.length > 0 && (
-                        <div className="rounded border-2 border-[#1a1a1a] bg-gradient-to-br from-[#fff0f0] to-[#ffd8d8] p-3 shadow-[3px_3px_0_rgba(0,0,0,0.15)]">
-                          <div className="mb-2 flex items-center gap-2 text-[11px] font-black tracking-wider text-[#8A0A0A]">
-                            <span>▼</span>
-                            <span>WEAK TO</span>
-                          </div>
-                          <div className="flex flex-wrap gap-2">
-                            {weaknesses.map((type) => (
-                              <span
-                                key={type}
-                                className="rounded-sm border-2 border-[#1a1a1a] px-2 py-1 text-[10px] font-black uppercase text-white shadow-[2px_2px_0_rgba(0,0,0,0.4)]"
-                                style={{ backgroundColor: TYPE_COLORS[type] || "#A8A878" }}
-                              >
-                                {type}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </>
-                  );
-                })()}
-
-              <div className="rounded border-2  border-[#1a1a1a] bg-white p-3 shadow-[3px_3px_0_rgba(0,0,0,0.15)]">
-                                  <EvolutionChain2 
-                                    startId={startId}
-                                    endId={ endId}
-                                    onSelect={(pokemon) => void loadPokemon(pokemon.id)}
-                                    speciesUrl={`https://pokeapi.co/api/v2/pokemon-species/${activePokemon.id}/`}
-                                    currentId={activePokemon.id}
-                                    onClose={onClose}
-                                
-                                  />
-              </div>
-
-              <div className="rounded border-2 border-[#1a1a1a] bg-white p-3 shadow-[3px_3px_0_rgba(0,0,0,0.15)]">
-                <div className="mb-2 text-[11px] font-black tracking-wider text-[#333]">BASE STATS</div>
-                <div className="space-y-2">
-                  {activePokemon.stats.map((stat) => {
-                    const statColor = getStatColor(stat.value);
-                    const pct = Math.min((stat.value / 150) * 100, 100);
-                    return (
-                      <div key={stat.name} className="flex items-center gap-2">
-                        <div className="w-16 text-[10px] font-black tracking-wide text-[#333] sm:w-20">
-                          {stat.name.toUpperCase()}
-                        </div>
-                        <div className="relative h-5 flex-1 overflow-hidden rounded-sm border border-[#1a1a1a] bg-[#e8e8e8]">
-                          <div
-                            className="h-full transition-all duration-700 ease-out"
-                            style={{
-                              width: `${pct}%`,
-                              backgroundColor: statColor,
-                              boxShadow: `inset 0 0 8px rgba(0,0,0,0.2)`,
-                            }}
-                          />
-                          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/30 to-transparent" />
-                        </div>
-                        <div
-                          className="w-10 text-right text-[11px] font-black sm:w-12"
-                          style={{ color: statColor }}
-                        >
-                          {stat.value}
-                        </div>
+                      <p className="gbm-label gbm-good">▲ EFFICACE CONTRE</p>
+                      <div className="gbm-chips">
+                        {advantages.map((t) => (
+                          <span key={t} className="gbm-type is-small" style={{ backgroundColor: TYPE_COLORS[t] || "#A8A878" }}>
+                            {t}
+                          </span>
+                        ))}
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
- 
-              <div className="grid grid-cols-2 gap-2">
-                <div className="rounded border-2 border-[#1a1a1a] bg-white p-3 shadow-[3px_3px_0_rgba(0,0,0,0.15)]">
-                  <div className="text-[11px]  font-black tracking-wider text-[#333]">HEIGHT</div>
-                  <p className="text-lg font-black text-black">{(activePokemon.height / 10).toFixed(1)}m</p>
-                </div>
-                <div className="rounded border-2 border-[#1a1a1a] bg-white p-3 shadow-[3px_3px_0_rgba(0,0,0,0.15)]">
-                  <div className="text-[11px]  font-black tracking-wider text-[#333]">WEIGHT</div>
-                  <p className="text-lg font-black text-black">{(activePokemon.weight / 10).toFixed(1)}kg</p>
+                    </>
+                  )}
+                  {weaknesses.length > 0 && (
+                    <>
+                      <p className="gbm-label gbm-bad">▼ FAIBLE CONTRE</p>
+                      <div className="gbm-chips">
+                        {weaknesses.map((t) => (
+                          <span key={t} className="gbm-type is-small" style={{ backgroundColor: TYPE_COLORS[t] || "#A8A878" }}>
+                            {t}
+                          </span>
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 
-              <div className="rounded border-2 border-[#1a1a1a] bg-white p-3 shadow-[3px_3px_0_rgba(0,0,0,0.15)]">
-                <div className="mb-2 text-[11px] font-black tracking-wider text-[#333]">
-                  POKÉDEX ENTRY
+              {/* ── Colonne droite : stats, taille, description, évolutions ── */}
+              <div className="gbm-col">
+                <div className="gbm-card">
+                  <p className="gbm-label">
+                    STATS DE BASE <span className="gbm-total">TOTAL {total}</span>
+                  </p>
+                  <div className="gbm-stats">
+                    {stats.map((stat) => (
+                      <div key={stat.name} className="gbm-stat">
+                        <span className="gbm-stat-name">{stat.name}</span>
+                        <span className="gbm-stat-track">
+                          <span
+                            className="gbm-stat-fill"
+                            style={{ width: `${Math.min((stat.value / 180) * 100, 100)}%`, backgroundColor: getStatColor(stat.value) }}
+                          />
+                        </span>
+                        <span className="gbm-stat-val">{stat.value}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <p className="text-sm leading-relaxed text-[#333]">{activePokemon.description}</p>
+
+                <div className="gbm-duo">
+                  <div className="gbm-card">
+                    <p className="gbm-label">TAILLE</p>
+                    <p className="gbm-big">{(height / 10).toLocaleString("fr-FR")} m</p>
+                  </div>
+                  <div className="gbm-card">
+                    <p className="gbm-label">POIDS</p>
+                    <p className="gbm-big">{(weight / 10).toLocaleString("fr-FR")} kg</p>
+                  </div>
+                </div>
+
+                {activePokemon.description && (
+                  <div className="gbm-card">
+                    <p className="gbm-label">POKÉDEX</p>
+                    <p className="gbm-text">{activePokemon.description}</p>
+                  </div>
+                )}
+
+                <div className="gbm-card">
+                  <p className="gbm-label">ÉVOLUTIONS</p>
+                  <EvolutionChain2
+                    startId={startId}
+                    endId={endId}
+                    onSelect={(pokemon) => void loadPokemon(pokemon.id)}
+                    speciesUrl={`https://pokeapi.co/api/v2/pokemon-species/${activePokemon.id}/`}
+                    currentId={activePokemon.id}
+                    onClose={onClose}
+                  />
+                </div>
               </div>
             </div>
           )}
 
           {tab === "abilities" && (
-            <div className="space-y-2">
-              {activePokemon.abilities && activePokemon.abilities.length > 0 ? (
-                activePokemon.abilities.map((ability) => (
+            <div className="gbm-list">
+              {!isDefaultForm && <p className="gbm-note">Talents de la forme {formLabel(variety ?? "", baseName)}.</p>}
+              {abilities.length > 0 ? (
+                abilities.map((ability) => (
                   <button
                     key={ability.name}
                     type="button"
-                    className="group flex w-full items-center justify-between rounded border-2 border-[#1a1a1a] bg-white p-3 text-left shadow-[3px_3px_0_rgba(0,0,0,0.15)] transition-all hover:-translate-y-0.5 hover:shadow-[4px_4px_0_rgba(0,0,0,0.25)]"
+                    className="gbm-row"
                     onClick={() => setSelectedAbility(ability.name)}
                   >
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-black uppercase tracking-wide text-[#333]">
-                          {formatName(ability.name)}
-                        </p>
-                        {ability.isHidden && (
-                          <span
-                            className="rounded-sm px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-white"
-                            style={{ backgroundColor: typeColor }}
-                          >
-                            Hidden
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <span className="ml-2 shrink-0 text-lg text-[#888] transition-transform group-hover:translate-x-1 group-hover:text-[#333]">
-                      →
-                    </span>
+                    <span className="gbm-row-name">{formatName(ability.name)}</span>
+                    {ability.isHidden && <span className="gbm-hidden">CACHÉ</span>}
+                    <span className="gbm-row-arrow" aria-hidden="true">▶</span>
                   </button>
                 ))
               ) : (
-                <p className="py-4 text-center text-[#999]">No abilities</p>
+                <p className="gbm-text">Aucun talent.</p>
               )}
             </div>
           )}
 
           {tab === "moves" && (
-            <div className="space-y-2">
-              {activePokemon.moves && activePokemon.moves.length > 0 ? (
-                activePokemon.moves.map((move, idx) => {
-                  // Fixed move level interpretation bug (e.g., Solar Beam appearing at level 35 incorrectly)
-                  const isLevelUp = move.level > 0;
-                  const labelText = isLevelUp ? `LVL ${move.level}` : "TM/OTHER";
-                  
-                  return (
-                    <button
-                      key={idx}
-                      type="button"
-                      className="group flex w-full items-center justify-between rounded border-2 border-[#1a1a1a] bg-white p-2 text-left shadow-[3px_3px_0_rgba(0,0,0,0.15)] transition-all hover:-translate-y-0.5 hover:shadow-[4px_4px_0_rgba(0,0,0,0.25)]"
-                      onClick={() => setSelectedMove(move)}
-                    >
-                      <p className="truncate text-sm font-black uppercase tracking-wide text-[#333]">
-                        {formatName(move.name)}
-                      </p>
-                      
-                      <div className="flex flex-col items-center">
-                      <div className="ml-2 shrink-0 text-[10px] font-black tracking-wider text-[#333]">
-                        {labelText}
-                      </div>
-
-                     <span className="ml-2 shrink-0 text-lg text-[#888] transition-transform group-hover:translate-x-1 group-hover:text-[#333]">
-                      →
-                    </span>
-
-                      </div>
-                      
-                    </button>
-                  );
-                })
+            <div className="gbm-list">
+              {!isDefaultForm && <p className="gbm-note">Attaques de la forme normale.</p>}
+              {activePokemon.moves.length > 0 ? (
+                activePokemon.moves.map((move, idx) => (
+                  <button key={`${move.name}-${idx}`} type="button" className="gbm-row" onClick={() => setSelectedMove(move)}>
+                    <span className="gbm-row-name">{formatName(move.name)}</span>
+                    <span className="gbm-row-lv">{move.level > 0 ? `N.${move.level}` : "CT"}</span>
+                    <span className="gbm-row-arrow" aria-hidden="true">▶</span>
+                  </button>
+                ))
               ) : (
-                <p className="py-4 text-center text-[#999]">No moves found for this pokemon.</p>
+                <p className="gbm-text">Aucune attaque trouvée.</p>
               )}
             </div>
           )}
-        </div>
-
-        <div className="shrink-0 border-t-4 border-[#1a1a1a] bg-[#c0c0c0] px-3 py-2 sm:px-4 sm:py-3">
-          <button
-            onClick={onClose}
-            className="w-full rounded-sm border-2 border-[#1a1a1a] bg-[#e8e8e8] px-4 py-2 text-sm font-black uppercase tracking-wide text-[#333] shadow-[2px_2px_0_rgba(0,0,0,0.3)] transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:bg-[#d0d0d0] hover:shadow-[1px_1px_0_rgba(0,0,0,0.3)]"
-          >
-            CLOSE
-          </button>
         </div>
       </div>
 
@@ -564,7 +666,7 @@ function AbilityModal({
   return (
     <div
       ref={modalRef}
-      className="pointer-events-auto fixed flex max-h-[calc(100dvh-24px)] w-[min(500px,calc(100vw-32px))] flex-col overflow-hidden rounded-lg border-4 border-[#1a1a1a] bg-gradient-to-b from-[#fffbe0] to-[#f0e68c] shadow-2xl transition-all duration-300 ease-out"
+      className="gb-window pointer-events-auto fixed flex max-h-[calc(100dvh-24px)] w-[min(500px,calc(100vw-32px))] flex-col overflow-hidden rounded-lg border-4 border-[#1a1a1a] bg-gradient-to-b from-[#fffbe0] to-[#f0e68c] shadow-2xl transition-all duration-300 ease-out"
       style={{
         left: `${pos.x}px`,
         top: `${pos.y}px`,
@@ -758,7 +860,7 @@ function MoveModal({
   return (
     <div
       ref={modalRef}
-      className="pointer-events-auto fixed flex max-h-[calc(100dvh-24px)] w-[min(660px,calc(100vw-32px))] flex-col overflow-hidden rounded-lg border-4 border-[#1a1a1a] bg-gradient-to-b from-[#f0f0ff] to-[#d8d8f0] shadow-2xl transition-all duration-300 ease-out"
+      className="gb-window pointer-events-auto fixed flex max-h-[calc(100dvh-24px)] w-[min(660px,calc(100vw-32px))] flex-col overflow-hidden rounded-lg border-4 border-[#1a1a1a] bg-gradient-to-b from-[#f0f0ff] to-[#d8d8f0] shadow-2xl transition-all duration-300 ease-out"
       style={{
         left: `${pos.x}px`,
         top: `${pos.y}px`,

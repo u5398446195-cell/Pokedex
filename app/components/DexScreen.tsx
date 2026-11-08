@@ -42,7 +42,7 @@ export function DexScreen({
           </div>
         )}
 
-        {!loading && !error && activePokemon && (
+        {!loading && !error && activePokemon?.artwork && (
           <>
             <div className="pointer-events-none absolute bottom-[10%] h-5 w-[52%] bg-[#145b61]/15 blur-2xl sm:h-8" />
 
@@ -77,7 +77,7 @@ export function DexScreen({
           content: "";
           position: absolute;
           inset: 0;
-          pointer-events-none;
+          pointer-events: none;
           box-shadow:
             inset 0 0 55px rgba(29, 72, 77, 0.17),
             inset 0 0 5px rgba(29, 72, 77, 0.15);

@@ -280,3 +280,100 @@ export async function fetchRegionList({
     }),
   );
 }
+// ─────────────────────────────────────────────────────────────
+// Formes et sexe d'un Pokémon
+// ─────────────────────────────────────────────────────────────
+
+export type PokemonVariety = {
+  name: string; // ex. "venusaur-mega"
+  isDefault: boolean;
+};
+
+export type PokemonCosmeticForm = {
+  name: string; // ex. "unown-b"
+  formName: string; // ex. "b"
+};
+
+export type PokemonSpeciesExtras = {
+  /** -1 = asexué, sinon nombre de huitièmes de femelles (0 = toujours mâle, 8 = toujours femelle) */
+  genderRate: number;
+  hasGenderDifferences: boolean;
+  /** formes qui changent le combat (Méga, Alola, Galar…) */
+  varieties: PokemonVariety[];
+  /** formes seulement visuelles (Zarbi A-Z, Morphéo…) */
+  cosmeticForms: PokemonCosmeticForm[];
+};
+
+export type PokemonFormDetails = {
+  name: string;
+  types: string[];
+  stats: PokemonStat[];
+  abilities: PokemonAbilityRef[];
+  height: number;
+  weight: number;
+  artwork: string;
+  artworkShiny: string;
+  sprite: string;
+  spriteFemale: string;
+  spriteShiny: string;
+  spriteShinyFemale: string;
+};
+
+const STAT_NAMES: Record<string, string> = {
+  hp: "HP",
+  attack: "ATK",
+  defense: "DEF",
+  "special-attack": "SP. ATK",
+  "special-defense": "SP. DEF",
+  speed: "SPD",
+};
+
+export async function fetchSpeciesExtras(id: number): Promise<PokemonSpeciesExtras> {
+  const [species, pokemon] = await Promise.all([
+    cachedFetch(`${API}/pokemon-species/${id}`),
+    cachedFetch(`${API}/pokemon/${id}`),
+  ]);
+
+  return {
+    genderRate: species.gender_rate ?? -1,
+    hasGenderDifferences: Boolean(species.has_gender_differences),
+    varieties: (species.varieties ?? []).map((v: any) => ({
+      name: v.pokemon.name,
+      isDefault: v.is_default,
+    })),
+    cosmeticForms:
+      (pokemon.forms ?? []).length > 1
+        ? pokemon.forms.map((f: any) => ({
+            name: f.name,
+            formName: f.name.replace(`${pokemon.name}-`, "") || f.name,
+          }))
+        : [],
+  };
+}
+
+export async function fetchFormDetails(name: string): Promise<PokemonFormDetails> {
+  const p = await cachedFetch(`${API}/pokemon/${name}`);
+  const s = p.sprites ?? {};
+  const art = s.other?.["official-artwork"] ?? {};
+
+  return {
+    name: p.name,
+    types: p.types.map((t: any) => t.type.name),
+    stats: p.stats.map((t: any) => ({ name: STAT_NAMES[t.stat.name] ?? t.stat.name, value: t.base_stat })),
+    abilities: p.abilities.map((a: any) => ({ name: a.ability.name, isHidden: a.is_hidden, slot: a.slot })),
+    height: p.height,
+    weight: p.weight,
+    artwork: art.front_default ?? s.front_default ?? "",
+    artworkShiny: art.front_shiny ?? s.front_shiny ?? "",
+    sprite: s.front_default ?? "",
+    spriteFemale: s.front_female ?? "",
+    spriteShiny: s.front_shiny ?? "",
+    spriteShinyFemale: s.front_shiny_female ?? "",
+  };
+}
+
+/** Sprite d'une forme purement visuelle (ex. Zarbi « B ») */
+export async function fetchCosmeticSprite(formName: string): Promise<{ sprite: string; spriteShiny: string }> {
+  const f = await cachedFetch(`${API}/pokemon-form/${formName}`);
+  return { sprite: f.sprites?.front_default ?? "", spriteShiny: f.sprites?.front_shiny ?? "" };
+}

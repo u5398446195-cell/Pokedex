@@ -35,8 +35,9 @@ export function DexInfo({ activePokemon }: { activePokemon: PokemonDetails | nul
         </div>
 
       <div className="mt-4 grid grid-cols-2 gap-2">
-        <DataBox label="Height" value={`${activePokemon.height} m`} />
-        <DataBox label="Weight" value={`${activePokemon.weight} kg`} />
+        {/* PokéAPI donne la taille en décimètres et le poids en hectogrammes */}
+        <DataBox label="Height" value={`${(activePokemon.height / 10).toLocaleString("fr-FR")} m`} />
+        <DataBox label="Weight" value={`${(activePokemon.weight / 10).toLocaleString("fr-FR")} kg`} />
       </div>
 
    

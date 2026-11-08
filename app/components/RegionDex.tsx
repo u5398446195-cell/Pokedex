@@ -37,6 +37,8 @@ type RegionDexProps = {
   frenchNames?: Record<number, string>;
 };
 
+const NO_FRENCH_NAMES: Record<number, string> = {};
+
 type ModalInstance = {
   uid: number;
   id: number;
@@ -52,7 +54,7 @@ export default function RegionDex({
   accent = "#f62d5f",
   desFcolor,
   statBarColor = "bg-[#ffdc74]",
-  frenchNames = {},
+  frenchNames = NO_FRENCH_NAMES,
 }: RegionDexProps) {
   const [pokemonList, setPokemonList] = useState<PokemonSummary[]>([]);
   const [activePokemon, setActivePokemon] =
@@ -279,7 +281,7 @@ export default function RegionDex({
   return (
     <main
       className="
-        relative flex h-[100dvh] min-h-0 flex-col
+        gb-dex relative flex h-[100dvh] min-h-0 flex-col
         overflow-hidden bg-[#2c0914]
       "
       style={
@@ -288,6 +290,9 @@ export default function RegionDex({
         } as React.CSSProperties
       }
     >
+      {/* Lignes d'écran cathodique (style rétro de tout le site) */}
+      <div className="gb-scanlines" aria-hidden="true" />
+
       {/* Fond du menu mobile */}
       <div
         className={[

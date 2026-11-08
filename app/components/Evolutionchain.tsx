@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PokemonSummary, fetchRegionList } from "../lib/pokeapi";
+import type { PokemonSummary } from "../lib/pokeapi";
 
 type EvolutionNode = {
   species: {
@@ -135,24 +135,15 @@ export default function EvolutionChain({
           return (
             <div
               key={pokemon.id}
-              onClick={async () => {
+              onClick={() => {
                 if (unavailable) return;
 
-                try {
-                  const [summary] = await fetchRegionList({
-                    startId: pokemon.id,
-                    limit: 1,
-                  });
-
-                  if (summary) {
-                    onSelect(summary);
-                  }
-                } catch (error) {
-                  console.error(
-                    "Error selecting evolution:",
-                    error
-                  );
-                }
+                onSelect({
+                  id: pokemon.id,
+                  englishName: pokemon.name,
+                  frenchName: pokemon.name,
+                  sprite: pokemon.image,
+                });
               }}
               className={`relative flex w-full shrink-0 flex-row border p-1.5 font-mono text-white ${
                 unavailable

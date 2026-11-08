@@ -103,13 +103,17 @@ export function DexSearch({
               <span className="w-9 font-mono text-[9px] font-black text-white/35">
                 {String(pokemon.id).padStart(3, "0")}
               </span>
-              <Image
-                src={pokemon.sprite}
-                alt=""
-                width={32}
-                height={32}
-                className="h-8 w-8 object-contain"
-              />
+              {pokemon.sprite ? (
+                <Image
+                  src={pokemon.sprite}
+                  alt=""
+                  width={32}
+                  height={32}
+                  className="h-8 w-8 object-contain"
+                />
+              ) : (
+                <span className="h-8 w-8" />
+              )}
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[11px] font-black uppercase tracking-[0.1em] text-white">
                   {formatName(pokemon.englishName)}
